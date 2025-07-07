@@ -1,7 +1,1 @@
-services:
-  book_boy:
-    image: book_boy:prod
-    build:
-      context: .
-      dockerfile: Dockerfile
-    working_dir: /app
+

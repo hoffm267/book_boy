@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd "$(dirname "$0")/.."
+
 MODE=${MODE:-prod}  # default to production mode
 
 if [ "$MODE" = "dev" ]; then

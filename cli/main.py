@@ -25,6 +25,7 @@ def main():
 
     if args.command == "all":
         print(bookMap.items())
+        print("TEST")
         # this commented section will split the time when i get there
         # n = args.time.split(":")
         # if len(n) == 3:

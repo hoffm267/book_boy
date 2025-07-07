@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /cli
 
-COPY app/ /app/
+COPY . /cli
 
 ENTRYPOINT ["python", "main.py"]

@@ -1,0 +1,6 @@
+services:
+  book_boy:
+    image: book_boy:prod
+    build:
+      context: ./cli
+      dockerfile: ../docker/Dockerfile.cli
