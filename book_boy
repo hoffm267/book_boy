@@ -1,0 +1,10 @@
+#!/bin/sh
+
+MODE=${MODE:-prod}  # default to production mode
+
+if [ "$MODE" = "dev" ]; then
+  make run-dev ARGS="$*"
+else
+  make run-prod ARGS="$*"
+fi
+
