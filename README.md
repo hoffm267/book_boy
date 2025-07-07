@@ -6,10 +6,14 @@ book boy
 -data.json for format reference
 
 ToDo:
+-ADD GOLANG API FOR:
 -add persistent db
 -call to public library api to find exact version of book/ebook 
 -better conversion method than percent (have not tested to see how accurate yet)
+PYTHON CLI:
 -.gitignore
--Dockerfile
--extract logic to hosted api that cli tool calls?
--so many things I haven't even thought of yet
+
+fix the readme
+
+
+NEED: Docker >= 20.x for docker compose support

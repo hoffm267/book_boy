@@ -4,7 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: book_boy-dev
     volumes:
       - ./app:/app
     working_dir: /app
