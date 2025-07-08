@@ -6,6 +6,9 @@
 -data.json for format reference
 
 **ToDo**:
+- Scripts:
+    - restart server
+- Reduce image size (multi stage build)
 - ADD GOLANG API FOR:
     - add persistent db
     - call to public library api to find exact version of book/ebook 

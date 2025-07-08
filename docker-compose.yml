@@ -16,4 +16,24 @@ services:
       dockerfile: Dockerfile
     command: $ARGS
     profiles: [cli_prod]
+  
+  backend_dev:
+    image: backend:prod
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/backend
+    ports:
+      - 8080:8080
+    profiles: [backend_dev]
+
+  backend_prod:
+    image: backend:prod
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    profiles: [backend_prod]
 
