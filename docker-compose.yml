@@ -1,1 +1,19 @@
+services:
+  cli_dev:
+    image: cli:dev
+    build:
+      context: ./cli
+      dockerfile: Dockerfile
+    volumes:
+      - ./cli:/cli
+    command: $ARGS
+    profiles: [cli_dev]
+
+  cli_prod:
+    image: cli:prod
+    build:
+      context: ./cli
+      dockerfile: Dockerfile
+    command: $ARGS
+    profiles: [cli_prod]
 

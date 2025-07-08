@@ -1,8 +1,0 @@
-services:
-  book_boy:
-    image: book_boy:dev
-    build:
-      context: ./cli
-      dockerfile: ../docker/Dockerfile.cli
-    volumes:
-      - ./cli:/cli
