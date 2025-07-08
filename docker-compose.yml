@@ -1,6 +1,5 @@
 services:
   cli_dev:
-    image: cli:dev
     build:
       context: ./cli
       dockerfile: Dockerfile
@@ -10,7 +9,6 @@ services:
     profiles: [cli_dev]
 
   cli_prod:
-    image: cli:prod
     build:
       context: ./cli
       dockerfile: Dockerfile
@@ -18,7 +16,6 @@ services:
     profiles: [cli_prod]
   
   backend_dev:
-    image: backend:dev
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -29,7 +26,6 @@ services:
     profiles: [backend_dev]
 
   backend_prod:
-    image: backend:prod
     build:
       context: ./backend
       dockerfile: Dockerfile

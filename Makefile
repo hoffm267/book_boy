@@ -1,9 +1,4 @@
-BASE_COMPOSE_FILE=docker-compose.yml
-
-.PHONY: cli-dev cli-prod backend_prod clean
-
-#docker build --tag docker-gs-ping .
-#docker run -p 8080:8080 docker-gs-ping
+.PHONY: cli-dev cli-prod backend-dev backend_prod clean
 
 cli-dev:
 	ARGS="$(ARGS)" docker compose --profile cli_dev up
