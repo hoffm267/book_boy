@@ -1,5 +1,9 @@
 .PHONY: cli-dev cli-prod backend-dev backend_prod clean
 
+#TODO: ADD THESE
+#docker exec -it your_container_name bash
+#psql -U postgres
+
 cli-dev:
 	ARGS="$(ARGS)" docker compose --profile cli_dev up
 

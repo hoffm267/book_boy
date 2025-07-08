@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println("hi")
+	fmt.Println("Server started.\n")
 
 	r := gin.Default()
 	r.GET("/ping", handler.GetTest)
