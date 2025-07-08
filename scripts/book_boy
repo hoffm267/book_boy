@@ -3,12 +3,12 @@
 cd "$(dirname "$0")/.."
 
 MODE=${MODE:-prod}  # default to production mode
-ARGS="$"
+ARGS="$*"
 
 #TODO make this run generic run-dev and move this script somewhere else
 if [ "$MODE" = "dev" ]; then
-  make cli-dev
+  make cli-dev ARGS=$ARGS
 else
-  make cli-prod
+  make cli-prod ARGS=$ARGS
 fi
 
