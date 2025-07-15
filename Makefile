@@ -1,7 +1,7 @@
 .PHONY: cli-dev cli-prod backend-dev backend_prod clean
 
 #TODO: ADD THESE
-#docker exec -it your_container_name bash
+#docker exec -it your_container_name /bin/sh
 #psql -U postgres
 
 cli-dev:
