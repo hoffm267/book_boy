@@ -16,13 +16,15 @@ backend-dev:
 backend-prod:
 	docker compose --profile backend_prod up -d
 
-clean:
+stop:
 	@if [ -n "$$(docker ps -aq)" ]; then \
 		echo "Removing containers..."; \
 		docker rm -vf $$(docker ps -aq) > /dev/null 2>&1; \
 	else \
 		echo "No containers to remove."; \
 	fi
+
+clean: stop
 	@if [ -n "$$(docker images -aq)" ]; then \
 		echo "Removing images..."; \
 		docker rmi -f $$(docker images -aq) > /dev/null 2>&1; \
