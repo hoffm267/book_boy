@@ -1,4 +1,4 @@
-package model
+package models
 
 // Keeping seperate from book because more fields will be added later, i.e. duration or narrator
 type Audiobook struct {

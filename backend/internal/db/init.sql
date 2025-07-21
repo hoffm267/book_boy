@@ -48,3 +48,24 @@ EXECUTE PROCEDURE update_updated_at_column();
 CREATE INDEX idx_user_progress_user ON user_book_progress(user_id);
 CREATE INDEX idx_user_progress_book ON user_book_progress(book_id);
 CREATE INDEX idx_user_progress_audio ON user_book_progress(audiobook_id);
+
+-- Sample data
+INSERT INTO users (username) VALUES
+  ('alice'),
+  ('bob'),
+  ('carol');
+
+INSERT INTO books (isbn, title) VALUES
+  ('978-3-16-148410-0', 'Go Programming Language'),
+  ('978-0-13-110362-7', 'The C Programming Language'),
+  ('978-0-201-03801-7', 'Design Patterns');
+
+INSERT INTO audiobooks (isbn, title) VALUES
+  ('978-1-60309-452-8', 'Clean Code'),
+  ('978-0-596-52068-7', 'Refactoring'),
+  ('978-0-321-63537-8', 'Effective Java');
+
+INSERT INTO user_book_progress (user_id, book_id, audiobook_id, book_page, audiobook_time) VALUES
+  (1, 1, NULL, 50, NULL),
+  (2, NULL, 2, NULL, INTERVAL '1 hour 15 minutes'),
+  (3, 3, NULL, 120, NULL);
