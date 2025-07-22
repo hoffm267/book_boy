@@ -1,26 +1,29 @@
 
 # book_boy
 
-**WIP**
--local data.json file for now 
--data.json for format reference
+**Current Project**  
+Minimals endpoints, but actively working to add more.  
+Base URL: localhost:8080  
+Endpoints: check main.go for currently available
 
-**ToDo**:
-- Scripts:
-    - restart server
-- Reduce image size (multi stage build)
+**To run**  
+> make backend-dev
+
+## ToDo
+
+- Scripts
+  - restart server
+  - update scripts after adding backend  
 - API
-    - fix TODOs in code
-    - call to public library api to find exact version of book/ebook 
-    -better conversion method than percent (have not tested to see how accurate yet)
-    - add tests for progress
-- PYTHON CLI:
+  - fix TODOs in code
+  - call to public library api to find exact version of book/ebook
+  - better conversion method than percent (have not tested to see how accurate yet)
+  - add tests for progress
+- PYTHON CLI
+  - add api calls
+  - finish command parsing
+- Reduce image size (multi stage build)
 - .gitignore
 - fix the readme
 
-
 NEED: Docker >= 20.x for docker compose support
-
-**To run**
-> prod image: ./scripts/book_boy
-> dev image: MODE=dev ./scripts/book_boy
