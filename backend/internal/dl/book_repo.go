@@ -1,9 +1,8 @@
 package dl
 
 import (
-	"database/sql"
-
 	"book_boy/backend/internal/models"
+	"database/sql"
 )
 
 type BookRepo interface {

@@ -9,10 +9,11 @@
 - Scripts:
     - restart server
 - Reduce image size (multi stage build)
-- ADD GOLANG API FOR:
-    - add persistent db
+- API
+    - fix TODOs in code
     - call to public library api to find exact version of book/ebook 
     -better conversion method than percent (have not tested to see how accurate yet)
+    - add tests for progress
 - PYTHON CLI:
 - .gitignore
 - fix the readme
