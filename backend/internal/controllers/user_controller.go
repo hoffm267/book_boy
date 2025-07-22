@@ -16,7 +16,7 @@ func NewUserController(service bl.UserService) *UserController {
 }
 
 func (uc *UserController) GetAll(c *gin.Context) {
-	users, err := uc.Service.GetAllUsers()
+	users, err := uc.Service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

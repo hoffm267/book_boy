@@ -1,8 +1,9 @@
 package bl
 
 import (
-	"book_boy/backend/internal/models"
 	"testing"
+
+	"book_boy/backend/internal/models"
 )
 
 type mockUserRepo struct {
@@ -14,7 +15,7 @@ func (m *mockUserRepo) GetAll() ([]models.User, error) {
 	return m.Users, m.Err
 }
 
-func TestUserService_GetAllUsers(t *testing.T) {
+func TestUserService_GetAll(t *testing.T) {
 	mockData := []models.User{
 		{ID: 1, Username: "alice"},
 		{ID: 2, Username: "bob"},
@@ -26,7 +27,7 @@ func TestUserService_GetAllUsers(t *testing.T) {
 	}
 
 	svc := NewUserService(mockRepo)
-	result, err := svc.GetAllUsers()
+	result, err := svc.GetAll()
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

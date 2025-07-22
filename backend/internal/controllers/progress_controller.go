@@ -16,7 +16,7 @@ func NewProgressController(service bl.ProgressService) *ProgressController {
 }
 
 func (pc *ProgressController) GetAll(c *gin.Context) {
-	progress, err := pc.Service.GetAllProgress()
+	progress, err := pc.Service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

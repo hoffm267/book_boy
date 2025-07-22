@@ -6,7 +6,7 @@ import (
 )
 
 type AudiobookService interface {
-	GetAllAudiobooks() ([]models.Audiobook, error)
+	GetAll() ([]models.Audiobook, error)
 }
 
 type audiobookService struct {
@@ -17,6 +17,6 @@ func NewAudiobookService(repo dl.AudiobookRepo) AudiobookService {
 	return &audiobookService{repo: repo}
 }
 
-func (s *audiobookService) GetAllAudiobooks() ([]models.Audiobook, error) {
+func (s *audiobookService) GetAll() ([]models.Audiobook, error) {
 	return s.repo.GetAll()
 }

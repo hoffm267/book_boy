@@ -15,7 +15,7 @@ func (m *mockAudiobookRepo) GetAll() ([]models.Audiobook, error) {
 	return m.Audiobooks, m.Err
 }
 
-func TestBookService_GetAllAudiobooks(t *testing.T) {
+func TestAudibookService_GetAll(t *testing.T) {
 	mockData := []models.Audiobook{
 		{ID: 1, ISBN: "1111", Title: "Test Book A"},
 		{ID: 2, ISBN: "2222", Title: "Test Book B"},
@@ -27,7 +27,7 @@ func TestBookService_GetAllAudiobooks(t *testing.T) {
 	}
 
 	svc := NewAudiobookService(mockRepo)
-	result, err := svc.GetAllAudiobooks()
+	result, err := svc.GetAll()
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

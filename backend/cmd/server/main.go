@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gin-gonic/gin"
+
 	"book_boy/backend/internal/bl"
 	"book_boy/backend/internal/controllers"
 	"book_boy/backend/internal/db"
 	"book_boy/backend/internal/dl"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -44,6 +44,7 @@ func main() {
 	r := gin.Default()
 	r.GET("/ping", controllers.GetTest)
 	r.GET("/books", bookController.GetAll)
+	r.GET("/books/:id", bookController.GetByID)
 	r.GET("/users", userController.GetAll)
 	r.GET("/audiobooks", audiobookController.GetAll)
 	r.GET("/progress", progressController.GetAll)

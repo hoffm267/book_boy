@@ -6,7 +6,7 @@ import (
 )
 
 type ProgressService interface {
-	GetAllProgress() ([]models.Progress, error)
+	GetAll() ([]models.Progress, error)
 }
 
 type progressService struct {
@@ -17,6 +17,6 @@ func NewProgressService(repo dl.ProgressRepo) ProgressService {
 	return &progressService{repo: repo}
 }
 
-func (s *progressService) GetAllProgress() ([]models.Progress, error) {
+func (s *progressService) GetAll() ([]models.Progress, error) {
 	return s.repo.GetAll()
 }

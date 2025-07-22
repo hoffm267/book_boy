@@ -1,12 +1,13 @@
 package dl
 
 import (
-	"book_boy/backend/internal/models"
 	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"book_boy/backend/internal/models"
 )
 
 type ProgressRepo interface {

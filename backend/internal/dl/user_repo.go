@@ -1,8 +1,9 @@
 package dl
 
 import (
-	"book_boy/backend/internal/models"
 	"database/sql"
+
+	"book_boy/backend/internal/models"
 )
 
 type UserRepo interface {

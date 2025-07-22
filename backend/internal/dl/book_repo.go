@@ -1,12 +1,14 @@
 package dl
 
 import (
-	"book_boy/backend/internal/models"
 	"database/sql"
+
+	"book_boy/backend/internal/models"
 )
 
 type BookRepo interface {
 	GetAll() ([]models.Book, error)
+	GetByID(bookID int) (*models.Book, error)
 }
 
 type bookRepo struct {
@@ -33,4 +35,19 @@ func (r *bookRepo) GetAll() ([]models.Book, error) {
 		books = append(books, b)
 	}
 	return books, nil
+}
+
+func (r *bookRepo) GetByID(bookID int) (*models.Book, error) {
+	row := r.db.QueryRow("SELECT id, isbn, title FROM books WHERE id = $1", bookID)
+
+	var book models.Book
+	err := row.Scan(&book.ID, &book.ISBN, &book.Title)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // 404 not found?
+		}
+		return nil, err
+	}
+
+	return &book, nil
 }

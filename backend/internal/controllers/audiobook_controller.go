@@ -16,7 +16,7 @@ func NewAudiobookController(service bl.AudiobookService) *AudiobookController {
 }
 
 func (ac *AudiobookController) GetAll(c *gin.Context) {
-	audiobooks, err := ac.Service.GetAllAudiobooks()
+	audiobooks, err := ac.Service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

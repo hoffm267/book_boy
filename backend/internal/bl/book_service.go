@@ -6,7 +6,8 @@ import (
 )
 
 type BookService interface {
-	GetAllBooks() ([]models.Book, error)
+	GetAll() ([]models.Book, error)
+	GetByID(bookID int) (*models.Book, error)
 }
 
 type bookService struct {
@@ -17,6 +18,10 @@ func NewBookService(repo dl.BookRepo) BookService {
 	return &bookService{repo: repo}
 }
 
-func (s *bookService) GetAllBooks() ([]models.Book, error) {
+func (s *bookService) GetAll() ([]models.Book, error) {
 	return s.repo.GetAll()
+}
+
+func (s *bookService) GetByID(bookID int) (*models.Book, error) {
+	return s.repo.GetByID(bookID)
 }
