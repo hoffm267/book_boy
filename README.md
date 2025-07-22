@@ -16,6 +16,7 @@ Endpoints: check main.go for currently available
   - update scripts after adding backend  
 - API
   - fix TODOs in code
+  - make search function that dynamically searched for params in request string
   - call to public library api to find exact version of book/ebook
   - better conversion method than percent (have not tested to see how accurate yet)
   - add tests for progress
