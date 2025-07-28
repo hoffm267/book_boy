@@ -9,6 +9,9 @@ import (
 type BookRepo interface {
 	GetAll() ([]models.Book, error)
 	GetByID(bookID int) (*models.Book, error)
+	Create(book *models.Book) (int, error)
+	Update(book *models.Book) error
+	Delete(bookID int) error
 }
 
 type bookRepo struct {
@@ -50,4 +53,29 @@ func (r *bookRepo) GetByID(bookID int) (*models.Book, error) {
 	}
 
 	return &book, nil
+}
+
+func (r *bookRepo) Create(book *models.Book) (int, error) {
+	var id int
+	err := r.db.QueryRow(
+		"INSERT INTO books (isbn, title) VALUES ($1, $2) RETURNING id",
+		book.ISBN, book.Title,
+	).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (r *bookRepo) Update(book *models.Book) error {
+	_, err := r.db.Exec(
+		"UPDATE books SET isbn = $1, title = $2 WHERE id = $3",
+		book.ISBN, book.Title, book.ID,
+	)
+	return err
+}
+
+func (r *bookRepo) Delete(bookID int) error {
+	_, err := r.db.Exec("DELETE FROM books WHERE id = $1", bookID)
+	return err
 }

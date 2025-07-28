@@ -1,14 +1,18 @@
 package bl
 
 import (
+	"errors"
 	"testing"
 
 	"book_boy/backend/internal/models"
 )
 
 type mockBookRepo struct {
-	Books map[int]models.Book
-	Err   error
+	Books       map[int]models.Book
+	Err         error
+	LastCreated *models.Book
+	LastUpdated *models.Book
+	LastDeleted int
 }
 
 func (m *mockBookRepo) GetAll() ([]models.Book, error) {
@@ -27,30 +31,58 @@ func (m *mockBookRepo) GetByID(bookID int) (*models.Book, error) {
 	return &b, nil
 }
 
+func (m *mockBookRepo) Create(book *models.Book) (int, error) {
+	if m.Err != nil {
+		return 0, m.Err
+	}
+	id := len(m.Books) + 1
+	book.ID = id
+	m.Books[id] = *book
+	m.LastCreated = book
+	return id, nil
+}
+
+func (m *mockBookRepo) Update(book *models.Book) error {
+	if m.Err != nil {
+		return m.Err
+	}
+	if _, exists := m.Books[book.ID]; !exists {
+		return errors.New("book not found")
+	}
+	m.Books[book.ID] = *book
+	m.LastUpdated = book
+	return nil
+}
+
+func (m *mockBookRepo) Delete(bookID int) error {
+	if m.Err != nil {
+		return m.Err
+	}
+	delete(m.Books, bookID)
+	m.LastDeleted = bookID
+	return nil
+}
+
 func TestBookService_GetAll(t *testing.T) {
-	mockData := map[int]models.Book{
-		1: {ID: 1, ISBN: "1111", Title: "Test Book A"},
-		2: {ID: 2, ISBN: "2222", Title: "Test Book B"},
-	}
-
 	mockRepo := &mockBookRepo{
-		Books: mockData,
-		Err:   nil,
+		Books: map[int]models.Book{
+			1: {ID: 1, ISBN: "1111", Title: "Test Book A"},
+			2: {ID: 2, ISBN: "2222", Title: "Test Book B"},
+		},
 	}
-
 	svc := NewBookService(mockRepo)
-	result, err := svc.GetAll()
 
+	result, err := svc.GetAll()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(result) != len(mockData) {
-		t.Fatalf("expected %d books, got %d", len(mockData), len(result))
+	if len(result) != len(mockRepo.Books) {
+		t.Fatalf("expected %d books, got %d", len(mockRepo.Books), len(result))
 	}
 
 	for _, book := range result {
-		expected, ok := mockData[book.ID]
+		expected, ok := mockRepo.Books[book.ID]
 		if !ok {
 			t.Errorf("unexpected book ID %d in result", book.ID)
 			continue
@@ -62,14 +94,12 @@ func TestBookService_GetAll(t *testing.T) {
 }
 
 func TestBookService_GetBookByID(t *testing.T) {
-	mockData := map[int]models.Book{
-		1: {ID: 1, ISBN: "1111", Title: "Test Book A"},
-		2: {ID: 2, ISBN: "2222", Title: "Test Book B"},
-	}
-
 	mockRepo := &mockBookRepo{
-		Books: mockData,
-		Err:   nil,
+		Books: map[int]models.Book{
+			1: {ID: 1, ISBN: "1111", Title: "Test Book A"},
+			2: {ID: 2, ISBN: "2222", Title: "Test Book B"},
+		},
+		Err: nil,
 	}
 
 	svc := NewBookService(mockRepo)
@@ -93,4 +123,53 @@ func TestBookService_GetBookByID(t *testing.T) {
 			t.Fatalf("expected nil, got %+v", book)
 		}
 	})
+}
+
+func TestBookService_Create(t *testing.T) {
+	mockRepo := &mockBookRepo{Books: make(map[int]models.Book)}
+	svc := NewBookService(mockRepo)
+
+	book := &models.Book{ISBN: "3333", Title: "New Book"}
+	id, err := svc.Create(book)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if id == 0 || mockRepo.Books[id].Title != "New Book" {
+		t.Fatalf("book not created properly")
+	}
+}
+
+func TestBookService_Update(t *testing.T) {
+	mockRepo := &mockBookRepo{
+		Books: map[int]models.Book{
+			1: {ID: 1, ISBN: "1111", Title: "Old Title"},
+		},
+	}
+	svc := NewBookService(mockRepo)
+
+	book := &models.Book{ID: 1, ISBN: "1111", Title: "Updated Title"}
+	err := svc.Update(book)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if mockRepo.Books[1].Title != "Updated Title" {
+		t.Fatalf("book title not updated")
+	}
+}
+
+func TestBookService_Delete(t *testing.T) {
+	mockRepo := &mockBookRepo{
+		Books: map[int]models.Book{
+			1: {ID: 1, ISBN: "1111", Title: "Delete Me"},
+		},
+	}
+	svc := NewBookService(mockRepo)
+
+	err := svc.Delete(1)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, exists := mockRepo.Books[1]; exists {
+		t.Fatalf("book not deleted")
+	}
 }

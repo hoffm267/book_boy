@@ -2,19 +2,28 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
-
-	"github.com/gin-gonic/gin"
 
 	"book_boy/backend/internal/bl"
 	"book_boy/backend/internal/controllers"
 	"book_boy/backend/internal/db"
 	"book_boy/backend/internal/dl"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	fmt.Println("Server started...")
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	if os.Getenv("DB_HOST") == "" || os.Getenv("DB_PORT") == "" {
+		panic("Missing DB_HOST or DB_PORT env vars")
+	}
 	connStr := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
@@ -23,6 +32,7 @@ func main() {
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME"),
 	)
+
 	database := db.InitDB(connStr)
 
 	bookRepo := dl.NewBookRepo(database)
@@ -42,11 +52,11 @@ func main() {
 	progressController := controllers.NewProgressController(progressService)
 
 	r := gin.Default()
+	bookController.RegisterRoutes(r)
+	audiobookController.RegisterRoutes(r)
+	userController.RegisterRoutes(r)
+	progressController.RegisterRoutes(r)
+
 	r.GET("/ping", controllers.GetTest)
-	r.GET("/books", bookController.GetAll)
-	r.GET("/books/:id", bookController.GetByID)
-	r.GET("/users", userController.GetAll)
-	r.GET("/audiobooks", audiobookController.GetAll)
-	r.GET("/progress", progressController.GetAll)
 	r.Run(":8080")
 }
