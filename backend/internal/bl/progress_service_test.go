@@ -31,13 +31,14 @@ func (m *mockProgressRepo) GetByID(id int) (*models.Progress, error) {
 	return nil, nil
 }
 
-func (m *mockProgressRepo) Create(p *models.Progress) error {
+func (m *mockProgressRepo) Create(p *models.Progress) (int, error) {
 	if m.Err != nil {
-		return m.Err
+		return 0, m.Err
 	}
-	p.ID = len(m.Data) + 1
+	id := len(m.Data) + 1
+	p.ID = id
 	m.Data[p.ID] = *p
-	return nil
+	return id, nil
 }
 
 func (m *mockProgressRepo) Update(p *models.Progress) error {
@@ -119,7 +120,7 @@ func TestProgressService(t *testing.T) {
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
-		err := svc.Create(&p)
+		_, err := svc.Create(&p)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}

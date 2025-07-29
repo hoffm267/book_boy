@@ -9,7 +9,7 @@ import (
 type UserRepo interface {
 	GetAll() ([]models.User, error)
 	GetByID(id int) (*models.User, error)
-	Create(user *models.User) error
+	Create(user *models.User) (int, error)
 	Update(user *models.User) error
 	Delete(id int) error
 }
@@ -53,11 +53,16 @@ func (r *userRepo) GetByID(id int) (*models.User, error) {
 	return &u, nil
 }
 
-func (r *userRepo) Create(user *models.User) error {
-	return r.db.QueryRow(
+func (r *userRepo) Create(user *models.User) (int, error) {
+	var id int
+	err := r.db.QueryRow(
 		"INSERT INTO users (username) VALUES ($1) RETURNING id",
 		user.Username,
-	).Scan(&user.ID)
+	).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (r *userRepo) Update(user *models.User) error {

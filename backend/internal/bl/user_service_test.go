@@ -26,13 +26,14 @@ func (m *mockUserRepo) GetByID(id int) (*models.User, error) {
 	return nil, nil
 }
 
-func (m *mockUserRepo) Create(user *models.User) error {
+func (m *mockUserRepo) Create(user *models.User) (int, error) {
 	if m.Err != nil {
-		return m.Err
+		return 0, m.Err
 	}
-	user.ID = len(m.Users) + 1
+	id := len(m.Users) + 1
+	user.ID = id
 	m.Users[user.ID] = *user
-	return nil
+	return id, nil
 }
 
 func (m *mockUserRepo) Update(user *models.User) error {
@@ -54,7 +55,7 @@ func TestUserService_CRUD(t *testing.T) {
 
 	// Create
 	user := &models.User{Username: "test_user"}
-	err := service.Create(user)
+	_, err := service.Create(user)
 	if err != nil || user.ID == 0 {
 		t.Fatalf("Create failed: %v", err)
 	}

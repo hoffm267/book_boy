@@ -13,7 +13,7 @@ import (
 type ProgressRepo interface {
 	GetAll() ([]models.Progress, error)
 	GetByID(id int) (*models.Progress, error)
-	Create(progress *models.Progress) error
+	Create(progress *models.Progress) (int, error)
 	Update(progress *models.Progress) error
 	Delete(id int) error
 }
@@ -118,12 +118,17 @@ func (r *progressRepo) GetByID(id int) (*models.Progress, error) {
 	return &p, nil
 }
 
-func (r *progressRepo) Create(p *models.Progress) error {
-	_, err := r.db.Exec(`
+func (r *progressRepo) Create(p *models.Progress) (int, error) {
+	var id int
+	err := r.db.QueryRow(`
 		INSERT INTO progress (user_id, book_id, audiobook_id, book_page, audiobook_time)
 		VALUES ($1, $2, $3, $4, $5)
-	`, p.UserID, p.BookID, p.AudiobookID, p.BookPage, p.AudiobookTime)
-	return err
+		RETURNING id
+	`, p.UserID, p.BookID, p.AudiobookID, p.BookPage, p.AudiobookTime).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (r *progressRepo) Update(p *models.Progress) error {

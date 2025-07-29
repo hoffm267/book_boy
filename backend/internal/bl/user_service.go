@@ -8,7 +8,7 @@ import (
 type UserService interface {
 	GetAll() ([]models.User, error)
 	GetByID(id int) (*models.User, error)
-	Create(user *models.User) error
+	Create(user *models.User) (int, error)
 	Update(user *models.User) error
 	Delete(id int) error
 }
@@ -29,7 +29,7 @@ func (s *userService) GetByID(id int) (*models.User, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *userService) Create(user *models.User) error {
+func (s *userService) Create(user *models.User) (int, error) {
 	return s.repo.Create(user)
 }
 

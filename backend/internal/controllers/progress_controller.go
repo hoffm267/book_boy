@@ -60,10 +60,12 @@ func (pc *ProgressController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := pc.service.Create(&p); err != nil {
+	id, err := pc.service.Create(&p)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	p.ID = id
 	c.JSON(http.StatusCreated, p)
 }
 

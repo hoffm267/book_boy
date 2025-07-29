@@ -58,10 +58,13 @@ func (uc *UserController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := uc.Service.Create(&user); err != nil {
+	id, err := uc.Service.Create(&user)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	user.ID = id
 	c.JSON(http.StatusCreated, gin.H{"data": user})
 }
 
