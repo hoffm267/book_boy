@@ -56,18 +56,18 @@ func (ac *AudiobookController) GetByID(c *gin.Context) {
 }
 
 func (ac *AudiobookController) Create(c *gin.Context) {
-	var ab models.Audiobook
-	if err := c.ShouldBindJSON(&ab); err != nil {
+	var audiobook models.Audiobook
+	if err := c.ShouldBindJSON(&audiobook); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	id, err := ac.Service.Create(&ab)
+	id, err := ac.Service.Create(&audiobook)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ab.ID = id
-	c.JSON(http.StatusCreated, gin.H{"data": ab})
+	audiobook.ID = id
+	c.JSON(http.StatusCreated, gin.H{"data": audiobook})
 }
 
 func (ac *AudiobookController) Update(c *gin.Context) {
@@ -76,17 +76,17 @@ func (ac *AudiobookController) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 		return
 	}
-	var ab models.Audiobook
-	if err := c.ShouldBindJSON(&ab); err != nil {
+	var audiobook models.Audiobook
+	if err := c.ShouldBindJSON(&audiobook); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ab.ID = id
-	if err := ac.Service.Update(&ab); err != nil {
+	audiobook.ID = id
+	if err := ac.Service.Update(&audiobook); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": ab})
+	c.JSON(http.StatusOK, gin.H{"data": audiobook})
 }
 
 func (ac *AudiobookController) Delete(c *gin.Context) {

@@ -2,10 +2,6 @@ package dl
 
 import (
 	"database/sql"
-	"fmt"
-	"strconv"
-	"strings"
-	"time"
 
 	"book_boy/backend/internal/models"
 )
@@ -26,33 +22,6 @@ func NewProgressRepo(db *sql.DB) ProgressRepo {
 	return &progressRepo{db: db}
 }
 
-// TODO change JSON return (probably on controller) to be HH:MM:SS format from nanoseconds
-func parsePgInterval(s string) (time.Duration, error) {
-	parts := strings.Split(s, ":")
-	if len(parts) != 3 {
-		return 0, fmt.Errorf("unexpected interval format: %s", s)
-	}
-
-	hours, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return 0, err
-	}
-	minutes, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return 0, err
-	}
-	seconds, err := strconv.ParseFloat(parts[2], 64)
-	if err != nil {
-		return 0, err
-	}
-
-	duration := time.Duration(hours)*time.Hour +
-		time.Duration(minutes)*time.Minute +
-		time.Duration(seconds*float64(time.Second))
-
-	return duration, nil
-}
-
 func (r *progressRepo) GetAll() ([]models.Progress, error) {
 	rows, err := r.db.Query(`
 		SELECT id, user_id, book_id, audiobook_id, book_page, audiobook_time, created_at, updated_at
@@ -63,32 +32,21 @@ func (r *progressRepo) GetAll() ([]models.Progress, error) {
 	}
 	defer rows.Close()
 
-	var progress []models.Progress
+	var progresses []models.Progress
 	for rows.Next() {
-		var p models.Progress
-		var audiobookTime sql.NullString
+		var progress models.Progress
 		err := rows.Scan(
-			&p.ID, &p.UserID, &p.BookID, &p.AudiobookID,
-			&p.BookPage, &audiobookTime, &p.CreatedAt, &p.UpdatedAt,
+			&progress.ID, &progress.UserID, &progress.BookID, &progress.AudiobookID,
+			&progress.BookPage, &progress.AudiobookTime, &progress.CreatedAt, &progress.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		if audiobookTime.Valid {
-			dur, err := parsePgInterval(audiobookTime.String)
-			if err != nil {
-				return nil, err
-			}
-			p.AudiobookTime = &dur
-		} else {
-			p.AudiobookTime = nil
-		}
-
-		progress = append(progress, p)
+		progresses = append(progresses, progress)
 	}
 
-	return progress, nil
+	return progresses, nil
 }
 
 func (r *progressRepo) GetByID(id int) (*models.Progress, error) {
@@ -98,45 +56,36 @@ func (r *progressRepo) GetByID(id int) (*models.Progress, error) {
 	`, id)
 
 	var p models.Progress
-	var audiobookTime sql.NullString
 	err := row.Scan(
 		&p.ID, &p.UserID, &p.BookID, &p.AudiobookID,
-		&p.BookPage, &audiobookTime, &p.CreatedAt, &p.UpdatedAt,
+		&p.BookPage, &p.AudiobookTime, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
-	if audiobookTime.Valid {
-		dur, err := parsePgInterval(audiobookTime.String)
-		if err != nil {
-			return nil, err
-		}
-		p.AudiobookTime = &dur
-	} else {
-		p.AudiobookTime = nil
-	}
+
 	return &p, nil
 }
 
-func (r *progressRepo) Create(p *models.Progress) (int, error) {
+func (r *progressRepo) Create(progress *models.Progress) (int, error) {
 	var id int
 	err := r.db.QueryRow(`
 		INSERT INTO progress (user_id, book_id, audiobook_id, book_page, audiobook_time)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
-	`, p.UserID, p.BookID, p.AudiobookID, p.BookPage, p.AudiobookTime).Scan(&id)
+	`, progress.UserID, progress.BookID, progress.AudiobookID, progress.BookPage, progress.AudiobookTime).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (r *progressRepo) Update(p *models.Progress) error {
+func (r *progressRepo) Update(progress *models.Progress) error {
 	_, err := r.db.Exec(`
 		UPDATE progress
 		SET user_id = $1, book_id = $2, audiobook_id = $3, book_page = $4, audiobook_time = $5, updated_at = NOW()
 		WHERE id = $6
-	`, p.UserID, p.BookID, p.AudiobookID, p.BookPage, p.AudiobookTime, p.ID)
+	`, progress.UserID, progress.BookID, progress.AudiobookID, progress.BookPage, progress.AudiobookTime, progress.ID)
 	return err
 }
 

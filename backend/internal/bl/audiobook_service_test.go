@@ -3,6 +3,7 @@ package bl
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"book_boy/backend/internal/models"
 )
@@ -25,24 +26,24 @@ func (m *mockAudiobookRepo) GetByID(id int) (*models.Audiobook, error) {
 	if m.Err != nil {
 		return nil, m.Err
 	}
-	for _, ab := range m.Audiobooks {
-		if ab.ID == id {
-			return &ab, nil
+	for _, audiobook := range m.Audiobooks {
+		if audiobook.ID == id {
+			return &audiobook, nil
 		}
 	}
 	return nil, nil
 }
 
-func (m *mockAudiobookRepo) Create(ab *models.Audiobook) (int, error) {
-	m.LastCreated = ab
+func (m *mockAudiobookRepo) Create(audiobook *models.Audiobook) (int, error) {
+	m.LastCreated = audiobook
 	if m.Err != nil {
 		return 0, m.Err
 	}
 	return 123, nil
 }
 
-func (m *mockAudiobookRepo) Update(ab *models.Audiobook) error {
-	m.LastUpdated = ab
+func (m *mockAudiobookRepo) Update(audiobook *models.Audiobook) error {
+	m.LastUpdated = audiobook
 	return m.Err
 }
 
@@ -54,9 +55,12 @@ func (m *mockAudiobookRepo) Delete(id int) error {
 // ---- TESTS ----
 
 func TestAudiobookService_GetAll(t *testing.T) {
+	d1 := time.Hour + 45*time.Minute + 30*time.Second
+	d2 := 90 * time.Minute
+
 	mockData := []models.Audiobook{
-		{ID: 1, ISBN: "1111", Title: "Test Book A"},
-		{ID: 2, ISBN: "2222", Title: "Test Book B"},
+		{ID: 1, Title: "Test Book A", TotalLength: &models.CustomDuration{Duration: d1}},
+		{ID: 2, Title: "Test Book B", TotalLength: &models.CustomDuration{Duration: d2}},
 	}
 
 	mockRepo := &mockAudiobookRepo{Audiobooks: mockData}
@@ -77,8 +81,9 @@ func TestAudiobookService_GetAll(t *testing.T) {
 }
 
 func TestAudiobookService_GetByID(t *testing.T) {
+	d1 := time.Hour + 45*time.Minute + 30*time.Second
 	mockRepo := &mockAudiobookRepo{
-		Audiobooks: []models.Audiobook{{ID: 1, ISBN: "1111", Title: "One"}},
+		Audiobooks: []models.Audiobook{{ID: 1, Title: "One", TotalLength: &models.CustomDuration{Duration: d1}}},
 	}
 	svc := NewAudiobookService(mockRepo)
 
@@ -95,15 +100,15 @@ func TestAudiobookService_Create(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{}
 	svc := NewAudiobookService(mockRepo)
 
-	ab := &models.Audiobook{ISBN: "3333", Title: "New Book"}
-	id, err := svc.Create(ab)
+	audiobook := &models.Audiobook{Title: "New Book"}
+	id, err := svc.Create(audiobook)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if id != 123 {
 		t.Errorf("expected ID 123, got %d", id)
 	}
-	if mockRepo.LastCreated != ab {
+	if mockRepo.LastCreated != audiobook {
 		t.Errorf("Create was not called with correct data")
 	}
 }
@@ -112,12 +117,13 @@ func TestAudiobookService_Update(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{}
 	svc := NewAudiobookService(mockRepo)
 
-	ab := &models.Audiobook{ID: 1, ISBN: "4444", Title: "Updated Book"}
-	err := svc.Update(ab)
+	d1 := time.Hour + 45*time.Minute + 30*time.Second
+	audiobook := &models.Audiobook{ID: 1, Title: "Updated Book", TotalLength: &models.CustomDuration{Duration: d1}}
+	err := svc.Update(audiobook)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if mockRepo.LastUpdated != ab {
+	if mockRepo.LastUpdated != audiobook {
 		t.Errorf("Update was not called with correct data")
 	}
 }

@@ -33,7 +33,7 @@ func (pc *ProgressController) GetAll(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, progress)
+	c.JSON(http.StatusOK, gin.H{"data": progress})
 }
 
 func (pc *ProgressController) GetByID(c *gin.Context) {
@@ -51,22 +51,22 @@ func (pc *ProgressController) GetByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "progress not found"})
 		return
 	}
-	c.JSON(http.StatusOK, progress)
+	c.JSON(http.StatusOK, gin.H{"data": progress})
 }
 
 func (pc *ProgressController) Create(c *gin.Context) {
-	var p models.Progress
-	if err := c.ShouldBindJSON(&p); err != nil {
+	var progress models.Progress
+	if err := c.ShouldBindJSON(&progress); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	id, err := pc.service.Create(&p)
+	id, err := pc.service.Create(&progress)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	p.ID = id
-	c.JSON(http.StatusCreated, p)
+	progress.ID = id
+	c.JSON(http.StatusCreated, progress)
 }
 
 func (pc *ProgressController) Update(c *gin.Context) {
@@ -75,17 +75,17 @@ func (pc *ProgressController) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	var p models.Progress
-	if err := c.ShouldBindJSON(&p); err != nil {
+	var progress models.Progress
+	if err := c.ShouldBindJSON(&progress); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	p.ID = id
-	if err := pc.service.Update(&p); err != nil {
+	progress.ID = id
+	if err := pc.service.Update(&progress); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, p)
+	c.JSON(http.StatusOK, progress)
 }
 
 func (pc *ProgressController) Delete(c *gin.Context) {

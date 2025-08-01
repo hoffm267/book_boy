@@ -23,7 +23,7 @@ func NewAudiobookRepo(db *sql.DB) AudiobookRepo {
 }
 
 func (r *audiobookRepo) GetAll() ([]models.Audiobook, error) {
-	rows, err := r.db.Query("SELECT id, isbn, title FROM audiobooks")
+	rows, err := r.db.Query("SELECT id, title, total_length FROM audiobooks")
 	if err != nil {
 		return nil, err
 	}
@@ -31,33 +31,33 @@ func (r *audiobookRepo) GetAll() ([]models.Audiobook, error) {
 
 	var audiobooks []models.Audiobook
 	for rows.Next() {
-		var ab models.Audiobook
-		if err := rows.Scan(&ab.ID, &ab.ISBN, &ab.Title); err != nil {
+		var audiobook models.Audiobook
+		if err := rows.Scan(&audiobook.ID, &audiobook.Title, &audiobook.TotalLength); err != nil {
 			return nil, err
 		}
-		audiobooks = append(audiobooks, ab)
+		audiobooks = append(audiobooks, audiobook)
 	}
 	return audiobooks, nil
 }
 
 func (r *audiobookRepo) GetByID(id int) (*models.Audiobook, error) {
-	row := r.db.QueryRow("SELECT id, isbn, title FROM audiobooks WHERE id = $1", id)
+	row := r.db.QueryRow("SELECT id, title, total_length FROM audiobooks WHERE id = $1", id)
 
-	var ab models.Audiobook
-	if err := row.Scan(&ab.ID, &ab.ISBN, &ab.Title); err != nil {
+	var audiobook models.Audiobook
+	if err := row.Scan(&audiobook.ID, &audiobook.Title, &audiobook.TotalLength); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return &ab, nil
+	return &audiobook, nil
 }
 
 func (r *audiobookRepo) Create(ab *models.Audiobook) (int, error) {
 	var id int
 	err := r.db.QueryRow(
-		"INSERT INTO audiobooks (isbn, title) VALUES ($1, $2) RETURNING id",
-		ab.ISBN, ab.Title,
+		"INSERT INTO audiobooks (title, length) VALUES ($1, $2) RETURNING id",
+		ab.Title, ab.TotalLength,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -65,10 +65,10 @@ func (r *audiobookRepo) Create(ab *models.Audiobook) (int, error) {
 	return id, nil
 }
 
-func (r *audiobookRepo) Update(ab *models.Audiobook) error {
+func (r *audiobookRepo) Update(audiobook *models.Audiobook) error {
 	_, err := r.db.Exec(
-		"UPDATE audiobooks SET isbn = $1, title = $2 WHERE id = $3",
-		ab.ISBN, ab.Title, ab.ID,
+		"UPDATE audiobooks SET title = $1, SET length = $2 WHERE id = $3",
+		audiobook.Title, audiobook.TotalLength, audiobook.ID,
 	)
 	return err
 }

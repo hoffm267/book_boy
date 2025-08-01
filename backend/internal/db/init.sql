@@ -7,13 +7,14 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
     isbn TEXT UNIQUE NOT NULL,
-    title TEXT
+    title TEXT,
+    total_pages INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS audiobooks (
     id SERIAL PRIMARY KEY,
-    isbn TEXT UNIQUE NOT NULL,
-    title TEXT
+    title TEXT,
+    total_length INTERVAL
 );
 
 CREATE TABLE IF NOT EXISTS progress (
@@ -66,22 +67,27 @@ CREATE INDEX idx_user_progress_book ON progress(book_id);
 CREATE INDEX idx_user_progress_audio ON progress(audiobook_id);
 
 -- DATA
+-- USERS
 INSERT INTO users (username) VALUES
   ('alice'),
   ('bob'),
   ('carol');
 
-INSERT INTO books (isbn, title) VALUES
-  ('978-3-16-148410-0', 'Go Programming Language'),
-  ('978-0-13-110362-7', 'The C Programming Language'),
-  ('978-0-201-03801-7', 'Design Patterns');
+-- BOOKS
+INSERT INTO books (isbn, title, total_pages) VALUES
+  ('978-3-16-148410-0', 'Go Programming Language', 400),
+  ('978-0-13-110362-7', 'The C Programming Language', 274),
+  ('978-0-201-03801-7', 'Design Patterns', 395);
 
-INSERT INTO audiobooks (isbn, title) VALUES
-  ('978-1-60309-452-8', 'Clean Code'),
-  ('978-0-596-52068-7', 'Refactoring'),
-  ('978-0-321-63537-8', 'Effective Java');
+-- AUDIOBOOKS
+INSERT INTO audiobooks (title, total_length) VALUES
+  ('Clean Code', INTERVAL '9 hours 30 minutes'),
+  ('Refactoring', INTERVAL '7 hours 45 minutes'),
+  ('Effective Java', INTERVAL '10 hours 15 minutes');
 
+-- PROGRESS
 INSERT INTO progress (user_id, book_id, audiobook_id, book_page, audiobook_time) VALUES
   (1, 1, NULL, 50, NULL),
   (2, NULL, 2, NULL, INTERVAL '1 hour 15 minutes'),
   (3, 3, NULL, 120, NULL);
+

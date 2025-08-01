@@ -8,10 +8,11 @@ import (
 
 type BookRepo interface {
 	GetAll() ([]models.Book, error)
-	GetByID(bookID int) (*models.Book, error)
+	GetByID(id int) (*models.Book, error)
 	Create(book *models.Book) (int, error)
 	Update(book *models.Book) error
-	Delete(bookID int) error
+	Delete(id int) error
+	GetByTitle(title string) (*models.Book, error)
 }
 
 type bookRepo struct {
@@ -22,8 +23,10 @@ func NewBookRepo(db *sql.DB) BookRepo {
 	return &bookRepo{db: db}
 }
 
+// CRUD
 func (r *bookRepo) GetAll() ([]models.Book, error) {
-	rows, err := r.db.Query("SELECT id, isbn, title FROM books")
+	//TODO find out if this is worth doing
+	rows, err := r.db.Query("SELECT id, isbn, title, total_pages FROM books")
 	if err != nil {
 		return nil, err
 	}
@@ -31,20 +34,20 @@ func (r *bookRepo) GetAll() ([]models.Book, error) {
 
 	var books []models.Book
 	for rows.Next() {
-		var b models.Book
-		if err := rows.Scan(&b.ID, &b.ISBN, &b.Title); err != nil {
+		var book models.Book
+		if err := rows.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
 			return nil, err
 		}
-		books = append(books, b)
+		books = append(books, book)
 	}
 	return books, nil
 }
 
-func (r *bookRepo) GetByID(bookID int) (*models.Book, error) {
-	row := r.db.QueryRow("SELECT id, isbn, title FROM books WHERE id = $1", bookID)
+func (r *bookRepo) GetByID(id int) (*models.Book, error) {
+	row := r.db.QueryRow("SELECT id, isbn, title, total_pages FROM books WHERE id = $1", id)
 
 	var book models.Book
-	err := row.Scan(&book.ID, &book.ISBN, &book.Title)
+	err := row.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // 404 not found?
@@ -75,7 +78,23 @@ func (r *bookRepo) Update(book *models.Book) error {
 	return err
 }
 
-func (r *bookRepo) Delete(bookID int) error {
-	_, err := r.db.Exec("DELETE FROM books WHERE id = $1", bookID)
+func (r *bookRepo) Delete(id int) error {
+	_, err := r.db.Exec("DELETE FROM books WHERE id = $1", id)
 	return err
+}
+
+// Extension
+func (r *bookRepo) GetByTitle(title string) (*models.Book, error) {
+	row := r.db.QueryRow("SELECT id, isbn, title, total_pages FROM books WHERE title = $1", title)
+
+	var book models.Book
+	err := row.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // 404 not found?
+		}
+		return nil, err
+	}
+
+	return &book, nil
 }

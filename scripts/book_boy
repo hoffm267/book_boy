@@ -6,9 +6,12 @@ MODE=${MODE:-prod}  # default to production mode
 ARGS="$*"
 
 #TODO make this run generic run-dev and move this script somewhere else
-if [ "$MODE" = "dev" ]; then
-  make cli-dev ARGS=$ARGS
-else
-  make cli-prod ARGS=$ARGS
-fi
+#if [ "$MODE" = "dev" ]; then
+#  make cli-dev ARGS=$ARGS;
+#else
+#   make cli-prod ARGS=$ARGS
+# fi
+make backend-dev;
+cd ./backend;
+go run ./cmd/server/main.go
 

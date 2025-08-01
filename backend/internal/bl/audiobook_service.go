@@ -8,8 +8,8 @@ import (
 type AudiobookService interface {
 	GetAll() ([]models.Audiobook, error)
 	GetByID(id int) (*models.Audiobook, error)
-	Create(ab *models.Audiobook) (int, error)
-	Update(ab *models.Audiobook) error
+	Create(audiobook *models.Audiobook) (int, error)
+	Update(audiobook *models.Audiobook) error
 	Delete(id int) error
 }
 
@@ -29,12 +29,12 @@ func (s *audiobookService) GetByID(id int) (*models.Audiobook, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *audiobookService) Create(ab *models.Audiobook) (int, error) {
-	return s.repo.Create(ab)
+func (s *audiobookService) Create(audiobook *models.Audiobook) (int, error) {
+	return s.repo.Create(audiobook)
 }
 
-func (s *audiobookService) Update(ab *models.Audiobook) error {
-	return s.repo.Update(ab)
+func (s *audiobookService) Update(audiobook *models.Audiobook) error {
+	return s.repo.Update(audiobook)
 }
 
 func (s *audiobookService) Delete(id int) error {

@@ -31,26 +31,26 @@ func (r *userRepo) GetAll() ([]models.User, error) {
 
 	var users []models.User
 	for rows.Next() {
-		var u models.User
-		if err := rows.Scan(&u.ID, &u.Username); err != nil {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Username); err != nil {
 			return nil, err
 		}
-		users = append(users, u)
+		users = append(users, user)
 	}
 	return users, nil
 }
 
 func (r *userRepo) GetByID(id int) (*models.User, error) {
-	var u models.User
+	var user models.User
 	err := r.db.QueryRow("SELECT id, username FROM users WHERE id = $1", id).
-		Scan(&u.ID, &u.Username)
+		Scan(&user.ID, &user.Username)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &u, nil
+	return &user, nil
 }
 
 func (r *userRepo) Create(user *models.User) (int, error) {

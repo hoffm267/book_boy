@@ -13,15 +13,15 @@ type mockUserRepo struct {
 
 func (m *mockUserRepo) GetAll() ([]models.User, error) {
 	var result []models.User
-	for _, u := range m.Users {
-		result = append(result, u)
+	for _, user := range m.Users {
+		result = append(result, user)
 	}
 	return result, m.Err
 }
 
 func (m *mockUserRepo) GetByID(id int) (*models.User, error) {
-	if u, ok := m.Users[id]; ok {
-		return &u, nil
+	if user, ok := m.Users[id]; ok {
+		return &user, nil
 	}
 	return nil, nil
 }

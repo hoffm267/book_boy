@@ -7,10 +7,10 @@ import (
 
 type BookService interface {
 	GetAll() ([]models.Book, error)
-	GetByID(bookID int) (*models.Book, error)
+	GetByID(id int) (*models.Book, error)
 	Create(book *models.Book) (int, error)
 	Update(book *models.Book) error
-	Delete(bookID int) error
+	Delete(id int) error
 }
 
 type bookService struct {
@@ -21,12 +21,13 @@ func NewBookService(repo dl.BookRepo) BookService {
 	return &bookService{repo: repo}
 }
 
+// CRUD
 func (s *bookService) GetAll() ([]models.Book, error) {
 	return s.repo.GetAll()
 }
 
-func (s *bookService) GetByID(bookID int) (*models.Book, error) {
-	return s.repo.GetByID(bookID)
+func (s *bookService) GetByID(id int) (*models.Book, error) {
+	return s.repo.GetByID(id)
 }
 
 func (s *bookService) Create(book *models.Book) (int, error) {
@@ -37,6 +38,11 @@ func (s *bookService) Update(book *models.Book) error {
 	return s.repo.Update(book)
 }
 
-func (s *bookService) Delete(bookID int) error {
-	return s.repo.Delete(bookID)
+func (s *bookService) Delete(id int) error {
+	return s.repo.Delete(id)
+}
+
+// Extensions
+func (s *bookService) GetByTitle(title string) (*models.Book, error) {
+	return s.repo.GetByTitle(title)
 }

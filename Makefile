@@ -11,7 +11,7 @@ cli-prod:
 	ARGS="$(ARGS)" docker compose --profile cli_prod up
 
 backend-dev:
-	docker compose --profile backend_dev up -d
+	docker compose --profile db up -d; \
 
 backend-prod:
 	docker compose --profile backend_prod up -d
@@ -30,4 +30,10 @@ clean: stop
 		docker rmi -f $$(docker images -aq) > /dev/null 2>&1; \
 	else \
 		echo "No images to remove."; \
+	fi
+	@if [ -n "$$(docker volume ls -q)" ]; then \
+		echo "Removing volumes..."; \
+		docker volume prune -a -f > /dev/null 2>&1; \
+	else \
+		echo "No volumes to remove."; \
 	fi

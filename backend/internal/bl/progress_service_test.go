@@ -31,24 +31,24 @@ func (m *mockProgressRepo) GetByID(id int) (*models.Progress, error) {
 	return nil, nil
 }
 
-func (m *mockProgressRepo) Create(p *models.Progress) (int, error) {
+func (m *mockProgressRepo) Create(progress *models.Progress) (int, error) {
 	if m.Err != nil {
 		return 0, m.Err
 	}
 	id := len(m.Data) + 1
-	p.ID = id
-	m.Data[p.ID] = *p
+	progress.ID = id
+	m.Data[progress.ID] = *progress
 	return id, nil
 }
 
-func (m *mockProgressRepo) Update(p *models.Progress) error {
+func (m *mockProgressRepo) Update(progress *models.Progress) error {
 	if m.Err != nil {
 		return m.Err
 	}
-	if _, ok := m.Data[p.ID]; !ok {
+	if _, ok := m.Data[progress.ID]; !ok {
 		return errors.New("not found")
 	}
-	m.Data[p.ID] = *p
+	m.Data[progress.ID] = *progress
 	return nil
 }
 
@@ -113,37 +113,37 @@ func TestProgressService(t *testing.T) {
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		p := models.Progress{
+		progress := models.Progress{
 			UserID:    2,
 			BookID:    ptrInt(2),
 			BookPage:  ptrInt(20),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
-		_, err := svc.Create(&p)
+		_, err := svc.Create(&progress)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if p.ID == 0 {
+		if progress.ID == 0 {
 			t.Fatal("expected ID to be set")
 		}
 	})
 
 	t.Run("Update found", func(t *testing.T) {
-		p := models.Progress{
+		progress := models.Progress{
 			ID:       1,
 			UserID:   1,
 			BookPage: ptrInt(15),
 		}
-		err := svc.Update(&p)
+		err := svc.Update(&progress)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 	})
 
 	t.Run("Update not found", func(t *testing.T) {
-		p := models.Progress{ID: 999}
-		err := svc.Update(&p)
+		progress := models.Progress{ID: 999}
+		err := svc.Update(&progress)
 		if err == nil {
 			t.Fatal("expected error for non-existent record")
 		}
