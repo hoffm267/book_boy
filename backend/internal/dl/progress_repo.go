@@ -12,6 +12,7 @@ type ProgressRepo interface {
 	Create(progress *models.Progress) (int, error)
 	Update(progress *models.Progress) error
 	Delete(id int) error
+	GetByIDWithTotals(id int) (*models.Progress, int, *models.CustomDuration, error)
 }
 
 type progressRepo struct {
@@ -31,7 +32,6 @@ func (r *progressRepo) GetAll() ([]models.Progress, error) {
 		return nil, err
 	}
 	defer rows.Close()
-
 	var progresses []models.Progress
 	for rows.Next() {
 		var progress models.Progress
@@ -92,4 +92,32 @@ func (r *progressRepo) Update(progress *models.Progress) error {
 func (r *progressRepo) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM progress WHERE id = $1", id)
 	return err
+}
+
+// Extensions
+func (r *progressRepo) GetByIDWithTotals(id int) (*models.Progress, int, *models.CustomDuration, error) {
+	query := `
+    SELECT
+    	p.id, p.user_id, p.book_id, p.audiobook_id, p.book_page, p.audiobook_time, p.created_at, p.updated_at,
+    	COALESCE(b.total_pages, 0),
+    	a.total_length
+    FROM progress p
+    LEFT JOIN books b ON p.book_id = b.id
+    LEFT JOIN audiobooks a ON p.audiobook_id = a.id
+    WHERE p.id = $1
+    `
+	var pr models.Progress
+	var totalPages int
+	var totalLength *models.CustomDuration
+
+	err := r.db.QueryRow(query, id).Scan(
+		&pr.ID, &pr.UserID, &pr.BookID, &pr.AudiobookID,
+		&pr.BookPage, &pr.AudiobookTime, &pr.CreatedAt, &pr.UpdatedAt,
+		&totalPages,
+		&totalLength,
+	)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	return &pr, totalPages, totalLength, nil
 }

@@ -68,6 +68,11 @@ func (m *mockBookRepo) GetByTitle(title string) (*models.Book, error) {
 	return nil, nil
 }
 
+func (m *mockBookRepo) FilterBooks(filter models.BookFilter) ([]models.Book, error) {
+	//TODO IMPLEMENT
+	return nil, nil
+}
+
 func TestBookService_GetAll(t *testing.T) {
 	mockRepo := &mockBookRepo{
 		Books: map[int]models.Book{

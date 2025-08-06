@@ -1,0 +1,23 @@
+meta {
+  name: UpdateByTime
+  type: http
+  seq: 4
+}
+
+patch {
+  url: http://localhost:8080/progress/?/time
+  body: json
+  auth: inherit
+}
+
+params:query {
+  /time: 
+}
+
+body:json {
+  { "audiobook_time": null }
+}
+
+settings {
+  encodeUrl: true
+}

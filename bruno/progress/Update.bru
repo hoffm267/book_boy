@@ -1,0 +1,28 @@
+meta {
+  name: Update
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://localhost:8080/?
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+        "id": null,
+        "user_id": null,
+        "book_id": null,
+        "audiobook_id": null,
+        "book_page": null,
+        "audiobook_time": null,
+        "created_at": null,
+        "updated_at": null
+  }
+}
+
+settings {
+  encodeUrl: true
+}

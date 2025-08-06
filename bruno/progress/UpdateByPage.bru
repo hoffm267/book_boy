@@ -1,0 +1,23 @@
+meta {
+  name: UpdateByPage
+  type: http
+  seq: 3
+}
+
+patch {
+  url: http://localhost:8080/progress/?/page
+  body: json
+  auth: inherit
+}
+
+params:query {
+  /page: 
+}
+
+body:json {
+  { "page": null }
+}
+
+settings {
+  encodeUrl: true
+}

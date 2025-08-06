@@ -25,6 +25,7 @@ func (bc *BookController) RegisterRoutes(r *gin.Engine) {
 		books.POST("", bc.Create)
 		books.PUT("/:id", bc.Update)
 		books.DELETE("/:id", bc.Delete)
+		books.GET("/filter", bc.FilterBooks)
 	}
 }
 
@@ -109,4 +110,32 @@ func (bc *BookController) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (bc *BookController) FilterBooks(c *gin.Context) {
+	var filter models.BookFilter
+	if idStr := c.Query("id"); idStr != "" {
+		if id, err := strconv.Atoi(idStr); err == nil {
+			filter.ID = &id
+		}
+	}
+	if isbn := c.Query("isbn"); isbn != "" {
+		filter.ISBN = &isbn
+	}
+	if title := c.Query("title"); title != "" {
+		filter.Title = &title
+	}
+	if tpStr := c.Query("total_pages"); tpStr != "" {
+		if tp, err := strconv.Atoi(tpStr); err == nil {
+			filter.TotalPages = &tp
+		}
+	}
+
+	books, err := bc.Service.FilterBooks(filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch books"})
+		return
+	}
+
+	c.JSON(http.StatusOK, books)
 }

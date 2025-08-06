@@ -63,6 +63,10 @@ func (m *mockProgressRepo) Delete(id int) error {
 	return nil
 }
 
+func (m *mockProgressRepo) GetByIDWithTotals(id int) (progress *models.Progress, bookPage int, audiobookTime *models.CustomDuration, err error) {
+	return nil, 0, nil, nil
+}
+
 func TestProgressService(t *testing.T) {
 	mockData := map[int]models.Progress{
 		1: {

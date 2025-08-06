@@ -2,6 +2,8 @@ package dl
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"book_boy/backend/internal/models"
 )
@@ -13,6 +15,7 @@ type BookRepo interface {
 	Update(book *models.Book) error
 	Delete(id int) error
 	GetByTitle(title string) (*models.Book, error)
+	FilterBooks(filter models.BookFilter) ([]models.Book, error)
 }
 
 type bookRepo struct {
@@ -97,4 +100,52 @@ func (r *bookRepo) GetByTitle(title string) (*models.Book, error) {
 	}
 
 	return &book, nil
+}
+
+func (r *bookRepo) FilterBooks(filter models.BookFilter) ([]models.Book, error) {
+	query := "SELECT id, isbn, title, total_pages FROM books"
+	var conditions []string
+	var args []interface{}
+	argIndex := 1
+
+	if filter.ID != nil {
+		conditions = append(conditions, fmt.Sprintf("id = $%d", argIndex))
+		args = append(args, *filter.ID)
+		argIndex++
+	}
+	if filter.ISBN != nil {
+		conditions = append(conditions, fmt.Sprintf("isbn = $%d", argIndex))
+		args = append(args, *filter.ISBN)
+		argIndex++
+	}
+	if filter.Title != nil {
+		conditions = append(conditions, fmt.Sprintf("title = $%d", argIndex))
+		args = append(args, *filter.Title)
+		argIndex++
+	}
+	if filter.TotalPages != nil {
+		conditions = append(conditions, fmt.Sprintf("total_pages = $%d", argIndex))
+		args = append(args, *filter.TotalPages)
+		argIndex++
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var books []models.Book
+	for rows.Next() {
+		var book models.Book
+		if err := rows.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
+			return nil, err
+		}
+		books = append(books, book)
+	}
+	return books, nil
 }

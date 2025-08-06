@@ -11,6 +11,7 @@ type BookService interface {
 	Create(book *models.Book) (int, error)
 	Update(book *models.Book) error
 	Delete(id int) error
+	FilterBooks(filter models.BookFilter) ([]models.Book, error)
 }
 
 type bookService struct {
@@ -45,4 +46,8 @@ func (s *bookService) Delete(id int) error {
 // Extensions
 func (s *bookService) GetByTitle(title string) (*models.Book, error) {
 	return s.repo.GetByTitle(title)
+}
+
+func (s *bookService) FilterBooks(filter models.BookFilter) ([]models.Book, error) {
+	return s.repo.FilterBooks(filter)
 }

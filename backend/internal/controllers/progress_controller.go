@@ -14,6 +14,14 @@ type ProgressController struct {
 	service bl.ProgressService
 }
 
+type updatePageReq struct {
+	Page int `json:"page" binding:"required,min=1"`
+}
+
+type updateTimeReq struct {
+	AudiobookTime models.CustomDuration `json:"audiobook_time" binding:"required"`
+}
+
 func NewProgressController(service bl.ProgressService) *ProgressController {
 	return &ProgressController{service: service}
 }
@@ -25,6 +33,8 @@ func (pc *ProgressController) RegisterRoutes(r *gin.Engine) {
 	progress.POST("", pc.Create)
 	progress.PUT("/:id", pc.Update)
 	progress.DELETE("/:id", pc.Delete)
+	progress.PATCH("/:id/page", pc.UpdateByPage) // update by page
+	progress.PATCH("/:id/time", pc.UpdateByTime) // update by audio time
 }
 
 func (pc *ProgressController) GetAll(c *gin.Context) {
@@ -99,4 +109,44 @@ func (pc *ProgressController) Delete(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (pc *ProgressController) UpdateByPage(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req updatePageReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := pc.service.UpdateProgressPage(id, req.Page); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.Status(http.StatusNoContent)
+}
+
+func (pc *ProgressController) UpdateByTime(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req updateTimeReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := pc.service.UpdateProgressTime(id, &req.AudiobookTime); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.Status(http.StatusNoContent)
 }

@@ -15,7 +15,7 @@ Endpoints: check main.go for currently available
   - restart server
   - update scripts after adding backend  
 - API
-  - see if it's worth caching on getAll/getByID
+  - rename audiobook_time to timestamp and book_page to page
   - fix TODOs in code
   - make search function that dynamically searched for params in request string
   - call to public library api to find exact version of book/ebook
