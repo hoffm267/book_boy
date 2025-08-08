@@ -2,12 +2,20 @@
 # book_boy
 
 **Current Project**  
-Minimals endpoints, but actively working to add more.  
-Base URL: localhost:8080  
-Endpoints: check main.go for currently available
+API functional, still developing python cli and additional features.  
+Base URL: http://localhost:8080  
+Endpoints: /books /audiobooks /users /progress  
+All endpoints support basic crud, check controller files for additional functionality  
+Test data is added on db creation for easier testing, will be removed later
 
 **To run**  
-> make backend-dev
+> ./script/book_boy  
+
+from root dir --- runs db and backend only  
+
+> make clean  
+
+from root dir --- removes db image but not db volume
 
 ## ToDo
 
@@ -17,18 +25,16 @@ Endpoints: check main.go for currently available
 - API
   - rename audiobook_time to timestamp and book_page to page
   - fix TODOs in code
-  - make search function that dynamically searched for params in request string
   - call to public library api to find exact version of book/ebook
     - give option to enter isbn for book (optional field). If they do, find info through api
-  - better conversion method than percent (have not tested to see how accurate yet)
-  - add tests for audio book time in progress
-  - switch make backend-dev do go run, not build image
+  - complete unfinished tests
 - PYTHON CLI
   - add api calls
   - finish command parsing
-- Reduce image size (multi stage build)
-- GET RID OF BACKEND-DEV IMAGE RUN GO RUN INSTEAD (check scripts)
-- .gitignore
-- fix the readme
+- Docker
+  - Reduce image size (multi stage build)
+  - finish builds for frontend
+- Bruno
+  - finish CRUD for all endpoints
 
 NEED: Docker >= 20.x for docker compose support
