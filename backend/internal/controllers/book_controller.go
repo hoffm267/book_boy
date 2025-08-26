@@ -25,6 +25,7 @@ func (bc *BookController) RegisterRoutes(r *gin.Engine) {
 		books.POST("", bc.Create)
 		books.PUT("/:id", bc.Update)
 		books.DELETE("/:id", bc.Delete)
+		books.GET("/search", bc.GetSimilarTitles)
 		books.GET("/filter", bc.FilterBooks)
 	}
 }
@@ -110,6 +111,27 @@ func (bc *BookController) Delete(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (bc *BookController) GetSimilarTitles(c *gin.Context) {
+	title := c.Query("title")
+	if title == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing title query parameter"})
+		return
+	}
+
+	books, err := bc.Service.GetSimilarTitles(title)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if books == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "books not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": books})
 }
 
 func (bc *BookController) FilterBooks(c *gin.Context) {

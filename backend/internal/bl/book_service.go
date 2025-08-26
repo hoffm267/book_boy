@@ -11,6 +11,8 @@ type BookService interface {
 	Create(book *models.Book) (int, error)
 	Update(book *models.Book) error
 	Delete(id int) error
+	GetByTitle(title string) (*models.Book, error)
+	GetSimilarTitles(title string) ([]models.Book, error)
 	FilterBooks(filter models.BookFilter) ([]models.Book, error)
 }
 
@@ -46,6 +48,10 @@ func (s *bookService) Delete(id int) error {
 // Extensions
 func (s *bookService) GetByTitle(title string) (*models.Book, error) {
 	return s.repo.GetByTitle(title)
+}
+
+func (s *bookService) GetSimilarTitles(title string) ([]models.Book, error) {
+	return s.repo.GetSimilarTitles(title)
 }
 
 func (s *bookService) FilterBooks(filter models.BookFilter) ([]models.Book, error) {

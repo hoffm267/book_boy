@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"book_boy/backend/internal/bl"
@@ -17,10 +16,8 @@ import (
 func main() {
 	fmt.Println("Server started...")
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	_ = godotenv.Load()
+
 	if os.Getenv("DB_HOST") == "" || os.Getenv("DB_PORT") == "" {
 		panic("Missing DB_HOST or DB_PORT env vars")
 	}
