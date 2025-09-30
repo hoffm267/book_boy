@@ -1,0 +1,23 @@
+meta {
+  name: Create
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/books
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "ISBN": "123-456-123",
+    "Title": "TestTitle",
+    "TotalPages": 69
+  }
+}
+
+settings {
+  encodeUrl: true
+}

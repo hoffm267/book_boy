@@ -34,7 +34,6 @@ func main() {
 
 	bookRepo := dl.NewBookRepo(database)
 	bookService := bl.NewBookService(bookRepo)
-	bookController := controllers.NewBookController(bookService)
 
 	userRepo := dl.NewUserRepo(database)
 	userService := bl.NewUserService(userRepo)
@@ -42,14 +41,17 @@ func main() {
 
 	audiobookRepo := dl.NewAudiobookRepo(database)
 	audiobookService := bl.NewAudiobookService(audiobookRepo)
-	audiobookController := controllers.NewAudiobookController(audiobookService)
 
 	progressRepo := dl.NewProgressRepo(database)
 	progressService := bl.NewProgressService(progressRepo)
-	progressController := controllers.NewProgressController(progressService)
 
 	r := gin.Default()
+
+	bookController := controllers.NewBookController(bookService, progressService)
+	audiobookController := controllers.NewAudiobookController(audiobookService, progressService)
+	progressController := controllers.NewProgressController(progressService)
 	bookController.RegisterRoutes(r)
+
 	audiobookController.RegisterRoutes(r)
 	userController.RegisterRoutes(r)
 	progressController.RegisterRoutes(r)

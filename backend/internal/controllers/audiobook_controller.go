@@ -10,11 +10,12 @@ import (
 )
 
 type AudiobookController struct {
-	Service bl.AudiobookService
+	Service         bl.AudiobookService
+	ProgressService bl.ProgressService
 }
 
-func NewAudiobookController(service bl.AudiobookService) *AudiobookController {
-	return &AudiobookController{Service: service}
+func NewAudiobookController(service bl.AudiobookService, pgService bl.ProgressService) *AudiobookController {
+	return &AudiobookController{Service: service, ProgressService: pgService}
 }
 
 func (ac *AudiobookController) RegisterRoutes(r *gin.Engine) {
@@ -58,15 +59,35 @@ func (ac *AudiobookController) GetByID(c *gin.Context) {
 
 func (ac *AudiobookController) Create(c *gin.Context) {
 	var audiobook models.Audiobook
+	var progress models.Progress
+
 	if err := c.ShouldBindJSON(&audiobook); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	id, err := ac.Service.Create(&audiobook)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	page := 1
+	progress = models.Progress{
+		UserID:        1,
+		BookID:        &id,
+		BookPage:      &page,
+		AudiobookID:   nil,
+		AudiobookTime: nil,
+	}
+
+	pgId, err := ac.ProgressService.Create(&progress)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	print(pgId)
+
 	audiobook.ID = id
 	c.JSON(http.StatusCreated, gin.H{"data": audiobook})
 }

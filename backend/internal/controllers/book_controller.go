@@ -10,11 +10,12 @@ import (
 )
 
 type BookController struct {
-	Service bl.BookService
+	Service         bl.BookService
+	ProgressService bl.ProgressService
 }
 
-func NewBookController(service bl.BookService) *BookController {
-	return &BookController{Service: service}
+func NewBookController(service bl.BookService, pgService bl.ProgressService) *BookController {
+	return &BookController{Service: service, ProgressService: pgService}
 }
 
 func (bc *BookController) RegisterRoutes(r *gin.Engine) {
@@ -61,6 +62,8 @@ func (bc *BookController) GetByID(c *gin.Context) {
 
 func (bc *BookController) Create(c *gin.Context) {
 	var book models.Book
+	var progress models.Progress
+
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -71,6 +74,22 @@ func (bc *BookController) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	page := 1
+	progress = models.Progress{
+		UserID:        1, //TODO switch this to logged in user
+		BookID:        &id,
+		BookPage:      &page,
+		AudiobookID:   nil,
+		AudiobookTime: nil,
+	}
+
+	pgId, err := bc.ProgressService.Create(&progress)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	print(pgId)
 
 	book.ID = id
 	c.JSON(http.StatusCreated, gin.H{"data": book})
