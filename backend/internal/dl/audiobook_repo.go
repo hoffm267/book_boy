@@ -12,6 +12,7 @@ type AudiobookRepo interface {
 	Create(ab *models.Audiobook) (int, error)
 	Update(ab *models.Audiobook) error
 	Delete(id int) error
+	GetSimilarTitles(title string) ([]models.Audiobook, error)
 }
 
 type audiobookRepo struct {
@@ -76,4 +77,22 @@ func (r *audiobookRepo) Update(audiobook *models.Audiobook) error {
 func (r *audiobookRepo) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM audiobooks WHERE id = $1", id)
 	return err
+}
+
+func (r *audiobookRepo) GetSimilarTitles(title string) ([]models.Audiobook, error) {
+	rows, err := r.db.Query("SELECT id, title, total_length FROM audiobooks WHERE title % $1 ORDER BY similarity(title, $1) DESC", title)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var audiobooks []models.Audiobook
+	for rows.Next() {
+		var audiobook models.Audiobook
+		if err := rows.Scan(&audiobook.ID, &audiobook.Title, &audiobook.TotalLength); err != nil {
+			return nil, err
+		}
+		audiobooks = append(audiobooks, audiobook)
+	}
+	return audiobooks, nil
 }

@@ -10,6 +10,7 @@ type AudiobookService interface {
 	GetByID(id int) (*models.Audiobook, error)
 	Create(audiobook *models.Audiobook) (int, error)
 	Update(audiobook *models.Audiobook) error
+	GetSimilarTitles(title string) ([]models.Audiobook, error)
 	Delete(id int) error
 }
 
@@ -39,4 +40,8 @@ func (s *audiobookService) Update(audiobook *models.Audiobook) error {
 
 func (s *audiobookService) Delete(id int) error {
 	return s.repo.Delete(id)
+}
+
+func (s *audiobookService) GetSimilarTitles(title string) ([]models.Audiobook, error) {
+	return s.repo.GetSimilarTitles(title)
 }

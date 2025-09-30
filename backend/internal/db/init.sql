@@ -68,7 +68,7 @@ CREATE INDEX idx_user_progress_user ON progress(user_id);
 CREATE INDEX idx_user_progress_book ON progress(book_id);
 CREATE INDEX idx_user_progress_audio ON progress(audiobook_id);
 CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin (title gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_audiobooks_title_trgm ON books USING gin (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_audiobooks_title_trgm ON audiobooks USING gin (title gin_trgm_ops);
 
 -- DATA
 -- USERS

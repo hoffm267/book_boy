@@ -52,6 +52,11 @@ func (m *mockAudiobookRepo) Delete(id int) error {
 	return m.Err
 }
 
+func (m *mockAudiobookRepo) GetSimilarTitles(title string) ([]models.Audiobook, error) {
+	//TODO IMPLEMENT
+	return nil, nil
+}
+
 // ---- TESTS ----
 
 func TestAudiobookService_GetAll(t *testing.T) {

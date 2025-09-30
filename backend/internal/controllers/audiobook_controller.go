@@ -25,6 +25,7 @@ func (ac *AudiobookController) RegisterRoutes(r *gin.Engine) {
 		audiobooks.POST("", ac.Create)
 		audiobooks.PUT("/:id", ac.Update)
 		audiobooks.DELETE("/:id", ac.Delete)
+		audiobooks.GET("/search", ac.GetSimilarTitles)
 	}
 }
 
@@ -100,4 +101,25 @@ func (ac *AudiobookController) Delete(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (ac *AudiobookController) GetSimilarTitles(c *gin.Context) {
+	title := c.Query("title")
+	if title == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing title query parameter"})
+		return
+	}
+
+	audiobooks, err := ac.Service.GetSimilarTitles(title)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if audiobooks == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "books not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": audiobooks})
 }
