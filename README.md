@@ -28,7 +28,7 @@ from root dir --- removes db image but not db volume
   - call to public library api to find exact version of book/ebook
     - give option to enter isbn for book (optional field). If they do, find info through api
   - complete unfinished tests
-  - add searching for book/audiobook already added by psql fuzzy score
+  - add user functionality (all users 1 right now)
 - PYTHON CLI
   - add api calls
   - finish command parsing

@@ -12,8 +12,11 @@ type ProgressService interface {
 	Create(progress *models.Progress) (int, error)
 	Update(progress *models.Progress) error
 	Delete(id int) error
-	UpdateProgressPage(id, bookPage int) error
+	UpdateProgressPage(id int, bookPage int) error
 	UpdateProgressTime(id int, audiobookTime *models.CustomDuration) error
+	SetBook(id int, bookId int) error
+	SetAudiobook(id int, audiobookId int) error
+	FilterProgress(filter models.ProgressFilter) ([]models.Progress, error)
 }
 
 type progressService struct {
@@ -90,4 +93,18 @@ func (s *progressService) UpdateProgressTime(progressID int, audiobookTime *mode
 	}
 
 	return s.repo.Update(pr)
+}
+
+func (s *progressService) SetBook(id int, bookId int) error {
+
+	return nil
+}
+
+func (s *progressService) SetAudiobook(id int, audiobookId int) error {
+
+	return nil
+}
+
+func (s *progressService) FilterProgress(filter models.ProgressFilter) ([]models.Progress, error) {
+	return s.repo.FilterProgress(filter)
 }

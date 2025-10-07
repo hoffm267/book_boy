@@ -74,19 +74,18 @@ func (ac *AudiobookController) Create(c *gin.Context) {
 
 	page := 1
 	progress = models.Progress{
-		UserID:        1,
+		UserID:        1, //TODO switch this to logged in user
 		BookID:        &id,
 		BookPage:      &page,
 		AudiobookID:   nil,
 		AudiobookTime: nil,
 	}
 
-	pgId, err := ac.ProgressService.Create(&progress)
+	_, err = ac.ProgressService.Create(&progress)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	print(pgId)
 
 	audiobook.ID = id
 	c.JSON(http.StatusCreated, gin.H{"data": audiobook})

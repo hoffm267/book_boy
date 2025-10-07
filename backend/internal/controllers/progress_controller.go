@@ -11,7 +11,7 @@ import (
 )
 
 type ProgressController struct {
-	service bl.ProgressService
+	Service bl.ProgressService
 }
 
 type updatePageReq struct {
@@ -22,8 +22,8 @@ type updateTimeReq struct {
 	AudiobookTime models.CustomDuration `json:"audiobook_time" binding:"required"`
 }
 
-func NewProgressController(service bl.ProgressService) *ProgressController {
-	return &ProgressController{service: service}
+func NewProgressController(Service bl.ProgressService) *ProgressController {
+	return &ProgressController{Service: Service}
 }
 
 func (pc *ProgressController) RegisterRoutes(r *gin.Engine) {
@@ -35,10 +35,11 @@ func (pc *ProgressController) RegisterRoutes(r *gin.Engine) {
 	progress.DELETE("/:id", pc.Delete)
 	progress.PATCH("/:id/page", pc.UpdateByPage) // update by page
 	progress.PATCH("/:id/time", pc.UpdateByTime) // update by audio time
+	progress.GET("/filter", pc.FilterProgress)
 }
 
 func (pc *ProgressController) GetAll(c *gin.Context) {
-	progress, err := pc.service.GetAll()
+	progress, err := pc.Service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -52,7 +53,7 @@ func (pc *ProgressController) GetByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	progress, err := pc.service.GetByID(id)
+	progress, err := pc.Service.GetByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -70,7 +71,7 @@ func (pc *ProgressController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	id, err := pc.service.Create(&progress)
+	id, err := pc.Service.Create(&progress)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -91,7 +92,7 @@ func (pc *ProgressController) Update(c *gin.Context) {
 		return
 	}
 	progress.ID = id
-	if err := pc.service.Update(&progress); err != nil {
+	if err := pc.Service.Update(&progress); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -104,7 +105,7 @@ func (pc *ProgressController) Delete(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	if err := pc.service.Delete(id); err != nil {
+	if err := pc.Service.Delete(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -124,7 +125,7 @@ func (pc *ProgressController) UpdateByPage(ctx *gin.Context) {
 		return
 	}
 
-	if err := pc.service.UpdateProgressPage(id, req.Page); err != nil {
+	if err := pc.Service.UpdateProgressPage(id, req.Page); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -144,9 +145,41 @@ func (pc *ProgressController) UpdateByTime(ctx *gin.Context) {
 		return
 	}
 
-	if err := pc.service.UpdateProgressTime(id, &req.AudiobookTime); err != nil {
+	if err := pc.Service.UpdateProgressTime(id, &req.AudiobookTime); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.Status(http.StatusNoContent)
+}
+
+func (pc *ProgressController) FilterProgress(c *gin.Context) {
+	var filter models.ProgressFilter
+	if idStr := c.Query("id"); idStr != "" {
+		if id, err := strconv.Atoi(idStr); err == nil {
+			filter.ID = &id
+		}
+	}
+	if userIdStr := c.Query("user_id"); userIdStr != "" {
+		if userId, err := strconv.Atoi(userIdStr); err == nil {
+			filter.UserID = &userId
+		}
+	}
+	if bookIdStr := c.Query("book_id"); bookIdStr != "" {
+		if bookId, err := strconv.Atoi(bookIdStr); err == nil {
+			filter.BookID = &bookId
+		}
+	}
+	if audiobookIdStr := c.Query("audiobook_id"); audiobookIdStr != "" {
+		if audiobookId, err := strconv.Atoi(audiobookIdStr); err == nil {
+			filter.AudiobookID = &audiobookId
+		}
+	}
+
+	progresses, err := pc.Service.FilterProgress(filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch progresss"})
+		return
+	}
+
+	c.JSON(http.StatusOK, progresses)
 }

@@ -12,3 +12,10 @@ type Progress struct {
 	CreatedAt     time.Time       `json:"created_at"`
 	UpdatedAt     time.Time       `json:"updated_at"`
 }
+
+type ProgressFilter struct {
+	ID          *int
+	UserID      *int
+	BookID      *int
+	AudiobookID *int
+}

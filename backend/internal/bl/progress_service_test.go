@@ -67,6 +67,18 @@ func (m *mockProgressRepo) GetByIDWithTotals(id int) (progress *models.Progress,
 	return nil, 0, nil, nil
 }
 
+func (m *mockProgressRepo) SetBook(id int, bookId int) error {
+	return nil
+}
+
+func (m *mockProgressRepo) SetAudiobook(id int, audiobookId int) error {
+	return nil
+}
+
+func (m *mockProgressRepo) FilterProgress(filter models.ProgressFilter) ([]models.Progress, error) {
+	return nil, nil
+}
+
 func TestProgressService(t *testing.T) {
 	mockData := map[int]models.Progress{
 		1: {

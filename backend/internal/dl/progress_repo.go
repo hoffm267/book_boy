@@ -2,6 +2,8 @@ package dl
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"book_boy/backend/internal/models"
 )
@@ -13,6 +15,7 @@ type ProgressRepo interface {
 	Update(progress *models.Progress) error
 	Delete(id int) error
 	GetByIDWithTotals(id int) (*models.Progress, int, *models.CustomDuration, error)
+	FilterProgress(filter models.ProgressFilter) ([]models.Progress, error)
 }
 
 type progressRepo struct {
@@ -120,4 +123,62 @@ func (r *progressRepo) GetByIDWithTotals(id int) (*models.Progress, int, *models
 		return nil, 0, nil, err
 	}
 	return &pr, totalPages, totalLength, nil
+}
+
+func (r *progressRepo) SetBook(id int, bookId int) error {
+
+	return nil
+}
+
+func (r *progressRepo) SetAudiobook(id int, audiobookId int) error {
+
+	return nil
+}
+
+func (r *progressRepo) FilterProgress(filter models.ProgressFilter) ([]models.Progress, error) {
+	query := "SELECT id, user_id, book_id, audiobook_id, book_page, audiobook_time, created_at, updated_at FROM progress"
+	var conditions []string
+	var args []interface{}
+	argIndex := 1
+
+	if filter.ID != nil {
+		conditions = append(conditions, fmt.Sprintf("id = $%d", argIndex))
+		args = append(args, *filter.ID)
+		argIndex++
+	}
+	if filter.UserID != nil {
+		conditions = append(conditions, fmt.Sprintf("user_id = $%d", argIndex))
+		args = append(args, *filter.UserID)
+		argIndex++
+	}
+	if filter.BookID != nil {
+		conditions = append(conditions, fmt.Sprintf("book_id = $%d", argIndex))
+		args = append(args, *filter.BookID)
+		argIndex++
+	}
+	if filter.AudiobookID != nil {
+		conditions = append(conditions, fmt.Sprintf("audiobook_id = $%d", argIndex))
+		args = append(args, *filter.AudiobookID)
+		argIndex++
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var progresses []models.Progress
+	for rows.Next() {
+		var progress models.Progress
+		if err := rows.Scan(&progress.ID, &progress.UserID, &progress.BookID, &progress.AudiobookID, &progress.BookPage, &progress.AudiobookTime, &progress.CreatedAt, &progress.UpdatedAt); err != nil {
+			return nil, err
+		}
+		progresses = append(progresses, progress)
+	}
+	return progresses, nil
 }

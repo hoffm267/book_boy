@@ -75,21 +75,34 @@ func (bc *BookController) Create(c *gin.Context) {
 		return
 	}
 
-	page := 1
-	progress = models.Progress{
-		UserID:        1, //TODO switch this to logged in user
-		BookID:        &id,
-		BookPage:      &page,
-		AudiobookID:   nil,
-		AudiobookTime: nil,
-	}
+	pgIdStr := c.Query("pgId")
+	if pgIdStr != "" {
+		pgId, err := strconv.Atoi(pgIdStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid book id"})
+			return
+		}
 
-	pgId, err := bc.ProgressService.Create(&progress)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		if err := bc.ProgressService.SetBook(pgId, id); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		page := 1
+		progress = models.Progress{
+			UserID:   1, //TODO switch this to logged in user
+			BookID:   &id,
+			BookPage: &page,
+			// AudiobookID:   nil,
+			// AudiobookTime: nil,
+		}
+
+		_, err = bc.ProgressService.Create(&progress)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
-	print(pgId)
 
 	book.ID = id
 	c.JSON(http.StatusCreated, gin.H{"data": book})
