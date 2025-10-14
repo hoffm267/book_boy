@@ -64,7 +64,14 @@ func (m *mockBookRepo) Delete(id int) error {
 }
 
 func (m *mockBookRepo) GetByTitle(title string) (*models.Book, error) {
-	//TODO IMPLEMENT
+	if m.Err != nil {
+		return nil, m.Err
+	}
+	for _, book := range m.Books {
+		if book.Title == title {
+			return &book, nil
+		}
+	}
 	return nil, nil
 }
 
@@ -74,8 +81,29 @@ func (m *mockBookRepo) GetSimilarTitles(title string) ([]models.Book, error) {
 }
 
 func (m *mockBookRepo) FilterBooks(filter models.BookFilter) ([]models.Book, error) {
-	//TODO IMPLEMENT
-	return nil, nil
+	if m.Err != nil {
+		return nil, m.Err
+	}
+	var results []models.Book
+	for _, book := range m.Books {
+		match := true
+		if filter.ID != nil && book.ID != *filter.ID {
+			match = false
+		}
+		if filter.ISBN != nil && book.ISBN != *filter.ISBN {
+			match = false
+		}
+		if filter.Title != nil && book.Title != *filter.Title {
+			match = false
+		}
+		if filter.TotalPages != nil && book.TotalPages != *filter.TotalPages {
+			match = false
+		}
+		if match {
+			results = append(results, book)
+		}
+	}
+	return results, nil
 }
 
 func TestBookService_GetAll(t *testing.T) {

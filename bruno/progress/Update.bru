@@ -5,9 +5,13 @@ meta {
 }
 
 put {
-  url: http://localhost:8080/progress/?
+  url: http://localhost:8080/progress/1
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
 }
 
 body:json {

@@ -7,14 +7,18 @@ meta {
 post {
   url: http://localhost:8080/books
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
 }
 
 body:json {
   {
-    "ISBN": "123-456-123",
-    "Title": "TestTitle",
-    "TotalPages": 69
+    "isbn": "123-456-123",
+    "title": "TestTitle",
+    "total_pages": 69
   }
 }
 

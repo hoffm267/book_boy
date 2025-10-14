@@ -3,7 +3,10 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 -- TABLES
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS books (
@@ -71,11 +74,11 @@ CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin (title gin_tr
 CREATE INDEX IF NOT EXISTS idx_audiobooks_title_trgm ON audiobooks USING gin (title gin_trgm_ops);
 
 -- DATA
--- USERS
-INSERT INTO users (username) VALUES
-  ('alice'),
-  ('bob'),
-  ('carol');
+-- USERS (password for all test users is 'password123')
+INSERT INTO users (username, email, password_hash) VALUES
+  ('alice', 'alice@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO'),
+  ('bob', 'bob@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO'),
+  ('carol', 'carol@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO');
 
 -- BOOKS
 INSERT INTO books (isbn, title, total_pages) VALUES

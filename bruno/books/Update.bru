@@ -1,0 +1,27 @@
+meta {
+  name: Update
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:8080/books/1
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "isbn": "123-456-789",
+    "title": "Updated Book Title",
+    "total_pages": 350
+  }
+}
+
+settings {
+  encodeUrl: true
+}

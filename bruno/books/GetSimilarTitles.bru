@@ -1,17 +1,21 @@
 meta {
   name: GetSimilarTitles
   type: http
-  seq: 3
+  seq: 7
 }
 
 get {
-  url: http://localhost:8080/books/search?title=
+  url: http://localhost:8080/books/search?title=Go
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
 }
 
 params:query {
-  title: 
+  title: Go
 }
 
 settings {

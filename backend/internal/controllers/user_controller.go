@@ -17,7 +17,7 @@ func NewUserController(service bl.UserService) *UserController {
 	return &UserController{Service: service}
 }
 
-func (uc *UserController) RegisterRoutes(r *gin.Engine) {
+func (uc *UserController) RegisterRoutes(r gin.IRouter) {
 	r.GET("/users", uc.GetAll)
 	r.GET("/users/:id", uc.GetByID)
 	r.POST("/users", uc.Create)

@@ -64,19 +64,71 @@ func (m *mockProgressRepo) Delete(id int) error {
 }
 
 func (m *mockProgressRepo) GetByIDWithTotals(id int) (progress *models.Progress, bookPage int, audiobookTime *models.CustomDuration, err error) {
+	if m.Err != nil {
+		return nil, 0, nil, m.Err
+	}
+	if prog, ok := m.Data[id]; ok {
+		page := 0
+		if prog.BookPage != nil {
+			page = *prog.BookPage
+		}
+		return &prog, page, prog.AudiobookTime, nil
+	}
 	return nil, 0, nil, nil
 }
 
 func (m *mockProgressRepo) SetBook(id int, bookId int) error {
-	return nil
+	if m.Err != nil {
+		return m.Err
+	}
+	if prog, ok := m.Data[id]; ok {
+		prog.BookID = &bookId
+		m.Data[id] = prog
+		return nil
+	}
+	return errors.New("not found")
 }
 
 func (m *mockProgressRepo) SetAudiobook(id int, audiobookId int) error {
-	return nil
+	if m.Err != nil {
+		return m.Err
+	}
+	if prog, ok := m.Data[id]; ok {
+		prog.AudiobookID = &audiobookId
+		m.Data[id] = prog
+		return nil
+	}
+	return errors.New("not found")
 }
 
 func (m *mockProgressRepo) FilterProgress(filter models.ProgressFilter) ([]models.Progress, error) {
-	return nil, nil
+	if m.Err != nil {
+		return nil, m.Err
+	}
+	var results []models.Progress
+	for _, prog := range m.Data {
+		match := true
+		if filter.ID != nil && prog.ID != *filter.ID {
+			match = false
+		}
+		if filter.UserID != nil && prog.UserID != *filter.UserID {
+			match = false
+		}
+		if filter.BookID != nil {
+			if prog.BookID == nil || *prog.BookID != *filter.BookID {
+				match = false
+			}
+		}
+		if filter.AudiobookID != nil {
+			if prog.AudiobookID == nil || *prog.AudiobookID != *filter.AudiobookID {
+				match = false
+			}
+		}
+		if match {
+			results = append(results, prog)
+		}
+	}
+	return results, nil
 }
 
 func TestProgressService(t *testing.T) {

@@ -1,21 +1,17 @@
 meta {
-  name: UpdateByPage
+  name: GetByID
   type: http
   seq: 3
 }
 
-patch {
-  url: http://localhost:8080/progress/1/page
-  body: json
+get {
+  url: http://localhost:8080/audiobooks/1
+  body: none
   auth: bearer
 }
 
 auth:bearer {
   token: {{auth_token}}
-}
-
-body:json {
-  { "page": 150 }
 }
 
 settings {

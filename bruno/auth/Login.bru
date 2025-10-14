@@ -1,0 +1,28 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "alice@example.com",
+    "password": "password123"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.setEnvVar("auth_token", res.body.token);
+  }
+}

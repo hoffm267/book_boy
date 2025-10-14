@@ -1,13 +1,17 @@
 meta {
   name: GetAll
   type: http
-  seq: 1
+  seq: 2
 }
 
 get {
   url: http://localhost:8080/audiobooks
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
 }
 
 settings {

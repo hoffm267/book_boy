@@ -8,6 +8,7 @@ import (
 	"book_boy/backend/internal/controllers"
 	"book_boy/backend/internal/db"
 	"book_boy/backend/internal/dl"
+	"book_boy/backend/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -39,23 +40,34 @@ func main() {
 	userService := bl.NewUserService(userRepo)
 	userController := controllers.NewUserController(userService)
 
+	// Auth setup
+	authService := bl.NewAuthService(userRepo)
+	authController := controllers.NewAuthController(authService)
+
 	audiobookRepo := dl.NewAudiobookRepo(database)
 	audiobookService := bl.NewAudiobookService(audiobookRepo)
 
 	progressRepo := dl.NewProgressRepo(database)
 	progressService := bl.NewProgressService(progressRepo)
 
-	r := gin.Default()
-
 	bookController := controllers.NewBookController(bookService, progressService)
 	audiobookController := controllers.NewAudiobookController(audiobookService, progressService)
 	progressController := controllers.NewProgressController(progressService)
-	bookController.RegisterRoutes(r)
 
-	audiobookController.RegisterRoutes(r)
-	userController.RegisterRoutes(r)
-	progressController.RegisterRoutes(r)
+	r := gin.Default()
 
-	r.GET("/ping", controllers.GetTest)
+	// Public routes (no auth required)
+	authController.RegisterRoutes(r)
+
+	// Protected routes (auth required)
+	protected := r.Group("")
+	protected.Use(middleware.AuthMiddleware(authService))
+	{
+		bookController.RegisterRoutes(protected)
+		audiobookController.RegisterRoutes(protected)
+		userController.RegisterRoutes(protected)
+		progressController.RegisterRoutes(protected)
+	}
+
 	r.Run(":8080")
 }

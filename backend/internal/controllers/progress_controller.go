@@ -26,7 +26,7 @@ func NewProgressController(Service bl.ProgressService) *ProgressController {
 	return &ProgressController{Service: Service}
 }
 
-func (pc *ProgressController) RegisterRoutes(r *gin.Engine) {
+func (pc *ProgressController) RegisterRoutes(r gin.IRouter) {
 	progress := r.Group("/progress")
 	progress.GET("", pc.GetAll)
 	progress.GET("/:id", pc.GetByID)
@@ -34,7 +34,7 @@ func (pc *ProgressController) RegisterRoutes(r *gin.Engine) {
 	progress.PUT("/:id", pc.Update)
 	progress.DELETE("/:id", pc.Delete)
 	progress.PATCH("/:id/page", pc.UpdateByPage) // update by page
-	progress.PATCH("/:id/time", pc.UpdateByTime) // update by audio time
+	progress.PATCH("/:id/time", pc.UpdateByTime) // update by timestamp
 	progress.GET("/filter", pc.FilterProgress)
 }
 
@@ -66,11 +66,23 @@ func (pc *ProgressController) GetByID(c *gin.Context) {
 }
 
 func (pc *ProgressController) Create(c *gin.Context) {
+	// Get authenticated user ID from token (set by auth middleware)
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	// Bind request body
 	var progress models.Progress
 	if err := c.ShouldBindJSON(&progress); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Override user_id with authenticated user (ignore any user_id from request body)
+	progress.UserID = userID.(int)
+
 	id, err := pc.Service.Create(&progress)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -86,12 +98,38 @@ func (pc *ProgressController) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	existing, err := pc.Service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if existing == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "progress not found"})
+		return
+	}
+
+	if existing.UserID != userID.(int) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you can only update your own progress"})
+		return
+	}
+
 	var progress models.Progress
 	if err := c.ShouldBindJSON(&progress); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// TODO make sure overriding is correct
 	progress.ID = id
+	progress.UserID = existing.UserID
+
 	if err := pc.Service.Update(&progress); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -105,6 +143,28 @@ func (pc *ProgressController) Delete(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	existing, err := pc.Service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if existing == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "progress not found"})
+		return
+	}
+
+	if existing.UserID != userID.(int) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you can only delete your own progress"})
+		return
+	}
+
 	if err := pc.Service.Delete(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

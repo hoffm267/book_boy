@@ -9,6 +9,7 @@ import (
 type UserRepo interface {
 	GetAll() ([]models.User, error)
 	GetByID(id int) (*models.User, error)
+	GetByEmail(email string) (*models.User, error)
 	Create(user *models.User) (int, error)
 	Update(user *models.User) error
 	Delete(id int) error
@@ -23,7 +24,7 @@ func NewUserRepo(db *sql.DB) UserRepo {
 }
 
 func (r *userRepo) GetAll() ([]models.User, error) {
-	rows, err := r.db.Query("SELECT id, username FROM users")
+	rows, err := r.db.Query("SELECT id, username, email, password_hash, created_at FROM users")
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func (r *userRepo) GetAll() ([]models.User, error) {
 	var users []models.User
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -42,8 +43,21 @@ func (r *userRepo) GetAll() ([]models.User, error) {
 
 func (r *userRepo) GetByID(id int) (*models.User, error) {
 	var user models.User
-	err := r.db.QueryRow("SELECT id, username FROM users WHERE id = $1", id).
-		Scan(&user.ID, &user.Username)
+	err := r.db.QueryRow("SELECT id, username, email, password_hash, created_at FROM users WHERE id = $1", id).
+		Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepo) GetByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := r.db.QueryRow("SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1", email).
+		Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -56,8 +70,8 @@ func (r *userRepo) GetByID(id int) (*models.User, error) {
 func (r *userRepo) Create(user *models.User) (int, error) {
 	var id int
 	err := r.db.QueryRow(
-		"INSERT INTO users (username) VALUES ($1) RETURNING id",
-		user.Username,
+		"INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id",
+		user.Username, user.Email, user.PasswordHash,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -67,8 +81,8 @@ func (r *userRepo) Create(user *models.User) (int, error) {
 
 func (r *userRepo) Update(user *models.User) error {
 	_, err := r.db.Exec(
-		"UPDATE users SET username = $1 WHERE id = $2",
-		user.Username, user.ID,
+		"UPDATE users SET username = $1, email = $2 WHERE id = $3",
+		user.Username, user.Email, user.ID,
 	)
 	return err
 }

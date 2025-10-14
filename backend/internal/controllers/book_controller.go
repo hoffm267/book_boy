@@ -18,7 +18,7 @@ func NewBookController(service bl.BookService, pgService bl.ProgressService) *Bo
 	return &BookController{Service: service, ProgressService: pgService}
 }
 
-func (bc *BookController) RegisterRoutes(r *gin.Engine) {
+func (bc *BookController) RegisterRoutes(r gin.IRouter) {
 	books := r.Group("/books")
 	{
 		books.GET("", bc.GetAll)
@@ -69,6 +69,13 @@ func (bc *BookController) Create(c *gin.Context) {
 		return
 	}
 
+	// Extract authenticated user ID from token
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
 	id, err := bc.Service.Create(&book)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -90,11 +97,9 @@ func (bc *BookController) Create(c *gin.Context) {
 	} else {
 		page := 1
 		progress = models.Progress{
-			UserID:   1, //TODO switch this to logged in user
+			UserID:   userID.(int),
 			BookID:   &id,
 			BookPage: &page,
-			// AudiobookID:   nil,
-			// AudiobookTime: nil,
 		}
 
 		_, err = bc.ProgressService.Create(&progress)

@@ -26,6 +26,15 @@ func (m *mockUserRepo) GetByID(id int) (*models.User, error) {
 	return nil, nil
 }
 
+func (m *mockUserRepo) GetByEmail(email string) (*models.User, error) {
+	for _, user := range m.Users {
+		if user.Email == email {
+			return &user, nil
+		}
+	}
+	return nil, nil
+}
+
 func (m *mockUserRepo) Create(user *models.User) (int, error) {
 	if m.Err != nil {
 		return 0, m.Err

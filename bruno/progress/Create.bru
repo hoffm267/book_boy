@@ -1,11 +1,11 @@
 meta {
-  name: UpdateByTime
+  name: Create
   type: http
-  seq: 4
+  seq: 6
 }
 
-patch {
-  url: http://localhost:8080/progress/2/time
+post {
+  url: http://localhost:8080/progress
   body: json
   auth: bearer
 }
@@ -15,7 +15,10 @@ auth:bearer {
 }
 
 body:json {
-  { "audiobook_time": "02:30:00" }
+  {
+    "book_id": 3,
+    "book_page": 200
+  }
 }
 
 settings {

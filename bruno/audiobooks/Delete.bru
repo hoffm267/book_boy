@@ -1,11 +1,11 @@
 meta {
-  name: GetAll
+  name: Delete
   type: http
-  seq: 2
+  seq: 6
 }
 
-get {
-  url: http://localhost:8080/books
+delete {
+  url: http://localhost:8080/audiobooks/1
   body: none
   auth: bearer
 }

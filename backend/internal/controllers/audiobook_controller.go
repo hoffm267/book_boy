@@ -18,7 +18,7 @@ func NewAudiobookController(service bl.AudiobookService, pgService bl.ProgressSe
 	return &AudiobookController{Service: service, ProgressService: pgService}
 }
 
-func (ac *AudiobookController) RegisterRoutes(r *gin.Engine) {
+func (ac *AudiobookController) RegisterRoutes(r gin.IRouter) {
 	audiobooks := r.Group("/audiobooks")
 	{
 		audiobooks.GET("", ac.GetAll)
@@ -66,19 +66,22 @@ func (ac *AudiobookController) Create(c *gin.Context) {
 		return
 	}
 
+	// Extract authenticated user ID from token
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
 	id, err := ac.Service.Create(&audiobook)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	page := 1
 	progress = models.Progress{
-		UserID:        1, //TODO switch this to logged in user
-		BookID:        &id,
-		BookPage:      &page,
-		AudiobookID:   nil,
-		AudiobookTime: nil,
+		UserID:      userID.(int),
+		AudiobookID: &id,
 	}
 
 	_, err = ac.ProgressService.Create(&progress)
