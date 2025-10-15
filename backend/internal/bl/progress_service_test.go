@@ -63,16 +63,12 @@ func (m *mockProgressRepo) Delete(id int) error {
 	return nil
 }
 
-func (m *mockProgressRepo) GetByIDWithTotals(id int) (progress *models.Progress, bookPage int, audiobookTime *models.CustomDuration, err error) {
+func (m *mockProgressRepo) GetByIDWithTotals(id int) (progress *models.Progress, totalPages int, totalLength *models.CustomDuration, err error) {
 	if m.Err != nil {
 		return nil, 0, nil, m.Err
 	}
 	if prog, ok := m.Data[id]; ok {
-		page := 0
-		if prog.BookPage != nil {
-			page = *prog.BookPage
-		}
-		return &prog, page, prog.AudiobookTime, nil
+		return &prog, 500, prog.AudiobookTime, nil
 	}
 	return nil, 0, nil, nil
 }
@@ -230,6 +226,111 @@ func TestProgressService(t *testing.T) {
 			t.Fatal("expected error for non-existent record")
 		}
 	})
+}
+
+func TestProgressService_UpdateProgressPage(t *testing.T) {
+	bookID := 1
+	bookPage := 50
+	mockRepo := &mockProgressRepo{
+		Data: map[int]models.Progress{
+			1: {
+				ID:       1,
+				UserID:   1,
+				BookID:   &bookID,
+				BookPage: &bookPage,
+			},
+		},
+	}
+	svc := NewProgressService(mockRepo)
+
+	err := svc.UpdateProgressPage(1, 100)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	updated := mockRepo.Data[1]
+	if updated.BookPage == nil || *updated.BookPage != 100 {
+		t.Fatalf("expected BookPage to be 100, got %v", updated.BookPage)
+	}
+}
+
+func TestProgressService_UpdateProgressTime(t *testing.T) {
+	bookID := 1
+	mockRepo := &mockProgressRepo{
+		Data: map[int]models.Progress{
+			1: {
+				ID:     1,
+				UserID: 1,
+				BookID: &bookID,
+			},
+		},
+	}
+	svc := NewProgressService(mockRepo)
+
+	newTime := &models.CustomDuration{Duration: 30 * time.Minute}
+	err := svc.UpdateProgressTime(1, newTime)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	updated := mockRepo.Data[1]
+	if updated.AudiobookTime == nil || updated.AudiobookTime.Duration != 30*time.Minute {
+		t.Fatalf("expected AudiobookTime to be 30 minutes, got %v", updated.AudiobookTime)
+	}
+}
+
+func TestProgressService_SetBook(t *testing.T) {
+	mockRepo := &mockProgressRepo{
+		Data: map[int]models.Progress{
+			1: {ID: 1, UserID: 1},
+		},
+	}
+	svc := NewProgressService(mockRepo)
+
+	err := svc.SetBook(1, 5)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestProgressService_SetAudiobook(t *testing.T) {
+	mockRepo := &mockProgressRepo{
+		Data: map[int]models.Progress{
+			1: {ID: 1, UserID: 1},
+		},
+	}
+	svc := NewProgressService(mockRepo)
+
+	err := svc.SetAudiobook(1, 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestProgressService_FilterProgress(t *testing.T) {
+	bookID1 := 1
+	bookID2 := 2
+	mockRepo := &mockProgressRepo{
+		Data: map[int]models.Progress{
+			1: {ID: 1, UserID: 1, BookID: &bookID1},
+			2: {ID: 2, UserID: 1, BookID: &bookID2},
+			3: {ID: 3, UserID: 2, BookID: &bookID1},
+		},
+	}
+	svc := NewProgressService(mockRepo)
+
+	userID := 1
+	filter := models.ProgressFilter{UserID: &userID}
+	results, err := svc.FilterProgress(filter)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected 2 progress records for user 1, got %d", len(results))
+	}
+	for _, prog := range results {
+		if prog.UserID != 1 {
+			t.Errorf("expected UserID 1, got %d", prog.UserID)
+		}
+	}
 }
 
 func ptrInt(i int) *int { return &i }

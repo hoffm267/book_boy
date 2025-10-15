@@ -37,7 +37,6 @@ func (ac *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	// Auto-login after registration
 	loginReq := &models.LoginRequest{
 		Email:    req.Email,
 		Password: req.Password,

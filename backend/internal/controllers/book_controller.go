@@ -69,7 +69,6 @@ func (bc *BookController) Create(c *gin.Context) {
 		return
 	}
 
-	// Extract authenticated user ID from token
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
@@ -82,15 +81,15 @@ func (bc *BookController) Create(c *gin.Context) {
 		return
 	}
 
-	pgIdStr := c.Query("pgId")
-	if pgIdStr != "" {
-		pgId, err := strconv.Atoi(pgIdStr)
+	pgIDStr := c.Query("pgId")
+	if pgIDStr != "" {
+		pgID, err := strconv.Atoi(pgIDStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid book id"})
 			return
 		}
 
-		if err := bc.ProgressService.SetBook(pgId, id); err != nil {
+		if err := bc.ProgressService.SetBook(pgID, id); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

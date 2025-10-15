@@ -136,7 +136,7 @@ func TestBookService_GetAll(t *testing.T) {
 	}
 }
 
-func TestBookService_GetBookByID(t *testing.T) {
+func TestBookService_GetByID(t *testing.T) {
 	mockRepo := &mockBookRepo{
 		Books: map[int]models.Book{
 			1: {ID: 1, ISBN: "1111", Title: "Test Book A", TotalPages: 500},
@@ -214,5 +214,75 @@ func TestBookService_Delete(t *testing.T) {
 	}
 	if _, exists := mockRepo.Books[1]; exists {
 		t.Fatalf("book not deleted")
+	}
+}
+
+func TestBookService_GetByTitle(t *testing.T) {
+	mockRepo := &mockBookRepo{
+		Books: map[int]models.Book{
+			1: {ID: 1, ISBN: "1111", Title: "Unique Title", TotalPages: 200},
+			2: {ID: 2, ISBN: "2222", Title: "Another Book", TotalPages: 300},
+		},
+	}
+	svc := NewBookService(mockRepo)
+
+	book, err := svc.GetByTitle("Unique Title")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if book == nil || book.Title != "Unique Title" {
+		t.Fatalf("expected book with title 'Unique Title', got %+v", book)
+	}
+
+	notFound, err := svc.GetByTitle("Nonexistent")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if notFound != nil {
+		t.Fatalf("expected nil for nonexistent title, got %+v", notFound)
+	}
+}
+
+func TestBookService_GetSimilarTitles(t *testing.T) {
+	mockRepo := &mockBookRepo{
+		Books: map[int]models.Book{
+			1: {ID: 1, ISBN: "1111", Title: "Harry Potter", TotalPages: 300},
+			2: {ID: 2, ISBN: "2222", Title: "Lord of the Rings", TotalPages: 400},
+		},
+	}
+	svc := NewBookService(mockRepo)
+
+	books, err := svc.GetSimilarTitles("Potter")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if books != nil {
+		t.Logf("GetSimilarTitles returned %d books (implementation pending)", len(books))
+	}
+}
+
+func TestBookService_FilterBooks(t *testing.T) {
+	mockRepo := &mockBookRepo{
+		Books: map[int]models.Book{
+			1: {ID: 1, ISBN: "1111", Title: "Book A", TotalPages: 200},
+			2: {ID: 2, ISBN: "2222", Title: "Book B", TotalPages: 300},
+			3: {ID: 3, ISBN: "3333", Title: "Book C", TotalPages: 200},
+		},
+	}
+	svc := NewBookService(mockRepo)
+
+	pages := 200
+	filter := models.BookFilter{TotalPages: &pages}
+	books, err := svc.FilterBooks(filter)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(books) != 2 {
+		t.Fatalf("expected 2 books with 200 pages, got %d", len(books))
+	}
+	for _, book := range books {
+		if book.TotalPages != 200 {
+			t.Errorf("expected TotalPages 200, got %d", book.TotalPages)
+		}
 	}
 }

@@ -40,7 +40,6 @@ func main() {
 	userService := bl.NewUserService(userRepo)
 	userController := controllers.NewUserController(userService)
 
-	// Auth setup
 	authService := bl.NewAuthService(userRepo)
 	authController := controllers.NewAuthController(authService)
 
@@ -56,10 +55,8 @@ func main() {
 
 	r := gin.Default()
 
-	// Public routes (no auth required)
 	authController.RegisterRoutes(r)
 
-	// Protected routes (auth required)
 	protected := r.Group("")
 	protected.Use(middleware.AuthMiddleware(authService))
 	{

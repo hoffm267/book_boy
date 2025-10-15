@@ -28,7 +28,6 @@ func NewAuthService(userRepo dl.UserRepo) AuthService {
 }
 
 func (s *authService) Register(req *models.RegisterRequest) (*models.User, error) {
-	// Check if user already exists
 	existingUser, err := s.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		return nil, err
@@ -37,13 +36,11 @@ func (s *authService) Register(req *models.RegisterRequest) (*models.User, error
 		return nil, errors.New("user with this email already exists")
 	}
 
-	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create user
 	user := &models.User{
 		Username:     req.Username,
 		Email:        req.Email,
@@ -61,7 +58,6 @@ func (s *authService) Register(req *models.RegisterRequest) (*models.User, error
 }
 
 func (s *authService) Login(req *models.LoginRequest) (string, *models.User, error) {
-	// Get user by email
 	user, err := s.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		return "", nil, err
@@ -70,13 +66,11 @@ func (s *authService) Login(req *models.LoginRequest) (string, *models.User, err
 		return "", nil, errors.New("invalid email or password")
 	}
 
-	// Verify password
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
 	if err != nil {
 		return "", nil, errors.New("invalid email or password")
 	}
 
-	// Generate JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":  user.ID,
 		"email":    user.Email,
@@ -125,13 +119,11 @@ func (s *authService) GetUserFromToken(tokenString string) (*models.User, error)
 		return nil, errors.New("invalid token claims")
 	}
 
-	// Extract user_id from claims
 	userIDFloat, ok := claims["user_id"].(float64)
 	if !ok {
 		return nil, errors.New("invalid user_id in token")
 	}
 
-	// Get user from database
 	user, err := s.userRepo.GetByID(int(userIDFloat))
 	if err != nil {
 		return nil, err

@@ -14,8 +14,8 @@ type ProgressService interface {
 	Delete(id int) error
 	UpdateProgressPage(id int, bookPage int) error
 	UpdateProgressTime(id int, audiobookTime *models.CustomDuration) error
-	SetBook(id int, bookId int) error
-	SetAudiobook(id int, audiobookId int) error
+	SetBook(id int, bookID int) error
+	SetAudiobook(id int, audiobookID int) error
 	FilterProgress(filter models.ProgressFilter) ([]models.Progress, error)
 }
 
@@ -47,7 +47,6 @@ func (s *progressService) Delete(id int) error {
 	return s.repo.Delete(id)
 }
 
-// Extensions
 func (s *progressService) UpdateProgressPage(id, bookPage int) error {
 	progress, totalPages, totalLength, err := s.repo.GetByIDWithTotals(id)
 	if err != nil {
@@ -95,12 +94,12 @@ func (s *progressService) UpdateProgressTime(progressID int, audiobookTime *mode
 	return s.repo.Update(pr)
 }
 
-func (s *progressService) SetBook(id int, bookId int) error {
+func (s *progressService) SetBook(id int, bookID int) error {
 
 	return nil
 }
 
-func (s *progressService) SetAudiobook(id int, audiobookId int) error {
+func (s *progressService) SetAudiobook(id int, audiobookID int) error {
 
 	return nil
 }

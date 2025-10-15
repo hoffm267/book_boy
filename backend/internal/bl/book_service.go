@@ -24,7 +24,6 @@ func NewBookService(repo dl.BookRepo) BookService {
 	return &bookService{repo: repo}
 }
 
-// CRUD
 func (s *bookService) GetAll() ([]models.Book, error) {
 	return s.repo.GetAll()
 }
@@ -45,7 +44,6 @@ func (s *bookService) Delete(id int) error {
 	return s.repo.Delete(id)
 }
 
-// Extensions
 func (s *bookService) GetByTitle(title string) (*models.Book, error) {
 	return s.repo.GetByTitle(title)
 }

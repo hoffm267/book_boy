@@ -62,37 +62,31 @@ func TestUserService_CRUD(t *testing.T) {
 	repo := &mockUserRepo{Users: make(map[int]models.User)}
 	service := NewUserService(repo)
 
-	// Create
 	user := &models.User{Username: "test_user"}
 	_, err := service.Create(user)
 	if err != nil || user.ID == 0 {
 		t.Fatalf("Create failed: %v", err)
 	}
 
-	// Read
 	fetched, _ := service.GetByID(user.ID)
 	if fetched == nil || fetched.Username != "test_user" {
 		t.Fatalf("GetByID failed")
 	}
 
-	// Update
 	user.Username = "updated_user"
 	if err := service.Update(user); err != nil {
 		t.Fatalf("Update failed: %v", err)
 	}
 
-	// Confirm update
 	updated, _ := service.GetByID(user.ID)
 	if updated.Username != "updated_user" {
 		t.Fatalf("Update did not persist")
 	}
 
-	// Delete
 	if err := service.Delete(user.ID); err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
 
-	// Confirm deletion
 	deleted, _ := service.GetByID(user.ID)
 	if deleted != nil {
 		t.Fatalf("Delete did not persist")

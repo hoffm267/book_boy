@@ -9,8 +9,8 @@ import (
 type AudiobookRepo interface {
 	GetAll() ([]models.Audiobook, error)
 	GetByID(id int) (*models.Audiobook, error)
-	Create(ab *models.Audiobook) (int, error)
-	Update(ab *models.Audiobook) error
+	Create(audiobook *models.Audiobook) (int, error)
+	Update(audiobook *models.Audiobook) error
 	Delete(id int) error
 	GetSimilarTitles(title string) ([]models.Audiobook, error)
 }
@@ -54,11 +54,11 @@ func (r *audiobookRepo) GetByID(id int) (*models.Audiobook, error) {
 	return &audiobook, nil
 }
 
-func (r *audiobookRepo) Create(ab *models.Audiobook) (int, error) {
+func (r *audiobookRepo) Create(audiobook *models.Audiobook) (int, error) {
 	var id int
 	err := r.db.QueryRow(
-		"INSERT INTO audiobooks (title, length) VALUES ($1, $2) RETURNING id",
-		ab.Title, ab.TotalLength,
+		"INSERT INTO audiobooks (title, total_length) VALUES ($1, $2) RETURNING id",
+		audiobook.Title, audiobook.TotalLength,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -68,7 +68,7 @@ func (r *audiobookRepo) Create(ab *models.Audiobook) (int, error) {
 
 func (r *audiobookRepo) Update(audiobook *models.Audiobook) error {
 	_, err := r.db.Exec(
-		"UPDATE audiobooks SET title = $1, SET length = $2 WHERE id = $3",
+		"UPDATE audiobooks SET title = $1, total_length = $2 WHERE id = $3",
 		audiobook.Title, audiobook.TotalLength, audiobook.ID,
 	)
 	return err

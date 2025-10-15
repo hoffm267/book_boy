@@ -66,7 +66,6 @@ func (ac *AudiobookController) Create(c *gin.Context) {
 		return
 	}
 
-	// Extract authenticated user ID from token
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})

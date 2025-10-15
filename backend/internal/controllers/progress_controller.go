@@ -33,8 +33,8 @@ func (pc *ProgressController) RegisterRoutes(r gin.IRouter) {
 	progress.POST("", pc.Create)
 	progress.PUT("/:id", pc.Update)
 	progress.DELETE("/:id", pc.Delete)
-	progress.PATCH("/:id/page", pc.UpdateByPage) // update by page
-	progress.PATCH("/:id/time", pc.UpdateByTime) // update by timestamp
+	progress.PATCH("/:id/page", pc.UpdateByPage)
+	progress.PATCH("/:id/time", pc.UpdateByTime)
 	progress.GET("/filter", pc.FilterProgress)
 }
 
@@ -66,21 +66,18 @@ func (pc *ProgressController) GetByID(c *gin.Context) {
 }
 
 func (pc *ProgressController) Create(c *gin.Context) {
-	// Get authenticated user ID from token (set by auth middleware)
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
 
-	// Bind request body
 	var progress models.Progress
 	if err := c.ShouldBindJSON(&progress); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Override user_id with authenticated user (ignore any user_id from request body)
 	progress.UserID = userID.(int)
 
 	id, err := pc.Service.Create(&progress)
@@ -126,7 +123,6 @@ func (pc *ProgressController) Update(c *gin.Context) {
 		return
 	}
 
-	// TODO make sure overriding is correct
 	progress.ID = id
 	progress.UserID = existing.UserID
 
@@ -172,44 +168,44 @@ func (pc *ProgressController) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (pc *ProgressController) UpdateByPage(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
+func (pc *ProgressController) UpdateByPage(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
 	var req updatePageReq
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if err := pc.Service.UpdateProgressPage(id, req.Page); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.Status(http.StatusNoContent)
+	c.Status(http.StatusNoContent)
 }
 
-func (pc *ProgressController) UpdateByTime(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
+func (pc *ProgressController) UpdateByTime(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
 	var req updateTimeReq
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if err := pc.Service.UpdateProgressTime(id, &req.AudiobookTime); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.Status(http.StatusNoContent)
+	c.Status(http.StatusNoContent)
 }
 
 func (pc *ProgressController) FilterProgress(c *gin.Context) {
@@ -219,19 +215,19 @@ func (pc *ProgressController) FilterProgress(c *gin.Context) {
 			filter.ID = &id
 		}
 	}
-	if userIdStr := c.Query("user_id"); userIdStr != "" {
-		if userId, err := strconv.Atoi(userIdStr); err == nil {
-			filter.UserID = &userId
+	if userIDStr := c.Query("user_id"); userIDStr != "" {
+		if userID, err := strconv.Atoi(userIDStr); err == nil {
+			filter.UserID = &userID
 		}
 	}
-	if bookIdStr := c.Query("book_id"); bookIdStr != "" {
-		if bookId, err := strconv.Atoi(bookIdStr); err == nil {
-			filter.BookID = &bookId
+	if bookIDStr := c.Query("book_id"); bookIDStr != "" {
+		if bookID, err := strconv.Atoi(bookIDStr); err == nil {
+			filter.BookID = &bookID
 		}
 	}
-	if audiobookIdStr := c.Query("audiobook_id"); audiobookIdStr != "" {
-		if audiobookId, err := strconv.Atoi(audiobookIdStr); err == nil {
-			filter.AudiobookID = &audiobookId
+	if audiobookIDStr := c.Query("audiobook_id"); audiobookIDStr != "" {
+		if audiobookID, err := strconv.Atoi(audiobookIDStr); err == nil {
+			filter.AudiobookID = &audiobookID
 		}
 	}
 

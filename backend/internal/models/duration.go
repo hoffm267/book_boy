@@ -50,7 +50,6 @@ func (d *CustomDuration) Scan(value interface{}) error {
 }
 
 func (d CustomDuration) Value() (driver.Value, error) {
-	// format as HH:MM:SS so DB stores the same textual form you parse/scan
 	h := int(d.Hours())
 	m := int(d.Minutes()) % 60
 	s := int(d.Seconds()) % 60

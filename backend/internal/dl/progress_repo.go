@@ -97,7 +97,6 @@ func (r *progressRepo) Delete(id int) error {
 	return err
 }
 
-// Extensions
 func (r *progressRepo) GetByIDWithTotals(id int) (*models.Progress, int, *models.CustomDuration, error) {
 	query := `
     SELECT
@@ -125,12 +124,12 @@ func (r *progressRepo) GetByIDWithTotals(id int) (*models.Progress, int, *models
 	return &pr, totalPages, totalLength, nil
 }
 
-func (r *progressRepo) SetBook(id int, bookId int) error {
+func (r *progressRepo) SetBook(id int, bookID int) error {
 
 	return nil
 }
 
-func (r *progressRepo) SetAudiobook(id int, audiobookId int) error {
+func (r *progressRepo) SetAudiobook(id int, audiobookID int) error {
 
 	return nil
 }

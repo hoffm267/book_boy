@@ -166,3 +166,22 @@ func TestAudiobookService_Errors(t *testing.T) {
 		t.Error("expected Delete to return error")
 	}
 }
+
+func TestAudiobookService_GetSimilarTitles(t *testing.T) {
+	d1 := time.Hour + 30*time.Minute
+	mockRepo := &mockAudiobookRepo{
+		Audiobooks: []models.Audiobook{
+			{ID: 1, Title: "The Great Gatsby", TotalLength: &models.CustomDuration{Duration: d1}},
+			{ID: 2, Title: "The Catcher in the Rye", TotalLength: &models.CustomDuration{Duration: d1}},
+		},
+	}
+	svc := NewAudiobookService(mockRepo)
+
+	audiobooks, err := svc.GetSimilarTitles("Great")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if audiobooks != nil {
+		t.Logf("GetSimilarTitles returned %d audiobooks (implementation pending)", len(audiobooks))
+	}
+}

@@ -27,9 +27,7 @@ func NewBookRepo(db *sql.DB) BookRepo {
 	return &bookRepo{db: db}
 }
 
-// CRUD
 func (r *bookRepo) GetAll() ([]models.Book, error) {
-	//TODO find out if this is worth doing
 	rows, err := r.db.Query("SELECT id, isbn, title, total_pages FROM books")
 	if err != nil {
 		return nil, err
@@ -54,7 +52,7 @@ func (r *bookRepo) GetByID(id int) (*models.Book, error) {
 	err := row.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // 404 not found?
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -87,7 +85,6 @@ func (r *bookRepo) Delete(id int) error {
 	return err
 }
 
-// Extension
 func (r *bookRepo) GetByTitle(title string) (*models.Book, error) {
 	row := r.db.QueryRow("SELECT id, isbn, title, total_pages FROM books WHERE title = $1", title)
 
@@ -95,7 +92,7 @@ func (r *bookRepo) GetByTitle(title string) (*models.Book, error) {
 	err := row.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // 404 not found?
+			return nil, nil
 		}
 		return nil, err
 	}

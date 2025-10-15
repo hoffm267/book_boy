@@ -79,7 +79,6 @@ func (m *mockAuthUserRepo) Delete(id int) error {
 }
 
 func setupAuthTest() *mockAuthUserRepo {
-	// Create a user with known password hash for "password123"
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 
 	repo := &mockAuthUserRepo{
@@ -131,7 +130,6 @@ func TestAuthService_Register(t *testing.T) {
 			t.Error("expected user ID to be set")
 		}
 
-		// Verify password was hashed
 		err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("password123"))
 		if err != nil {
 			t.Error("password was not hashed correctly")
@@ -144,7 +142,7 @@ func TestAuthService_Register(t *testing.T) {
 
 		req := &models.RegisterRequest{
 			Username: "duplicate",
-			Email:    "existing@example.com", // Already exists
+			Email:    "existing@example.com",
 			Password: "password123",
 		}
 
@@ -162,7 +160,7 @@ func TestAuthService_Register(t *testing.T) {
 
 	t.Run("repository GetByEmail error", func(t *testing.T) {
 		repo := setupAuthTest()
-		repo.Err = jwt.ErrInvalidKey // This will cause GetByEmail to fail
+		repo.Err = jwt.ErrInvalidKey
 		svc := NewAuthService(repo)
 
 		req := &models.RegisterRequest{
@@ -208,7 +206,6 @@ func TestAuthService_Login(t *testing.T) {
 			t.Errorf("expected username 'existing_user', got %s", user.Username)
 		}
 
-		// Verify token is valid JWT
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
 			secret = "your-secret-key-change-this-in-production"
@@ -275,7 +272,6 @@ func TestAuthService_ValidateToken(t *testing.T) {
 	svc := NewAuthService(repo)
 
 	t.Run("valid token", func(t *testing.T) {
-		// First login to get a valid token
 		req := &models.LoginRequest{
 			Email:    "existing@example.com",
 			Password: "password123",
@@ -285,7 +281,6 @@ func TestAuthService_ValidateToken(t *testing.T) {
 			t.Fatalf("login failed: %v", err)
 		}
 
-		// Validate the token
 		parsedToken, err := svc.ValidateToken(token)
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
@@ -303,7 +298,6 @@ func TestAuthService_ValidateToken(t *testing.T) {
 	})
 
 	t.Run("expired token", func(t *testing.T) {
-		// Create an expired token
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
 			secret = "your-secret-key-change-this-in-production"
@@ -313,7 +307,7 @@ func TestAuthService_ValidateToken(t *testing.T) {
 			"user_id":  1,
 			"email":    "existing@example.com",
 			"username": "existing_user",
-			"exp":      time.Now().Add(-1 * time.Hour).Unix(), // Expired 1 hour ago
+			"exp":      time.Now().Add(-1 * time.Hour).Unix(),
 			"iat":      time.Now().Add(-2 * time.Hour).Unix(),
 		})
 
@@ -341,7 +335,6 @@ func TestAuthService_GetUserFromToken(t *testing.T) {
 	svc := NewAuthService(repo)
 
 	t.Run("valid token returns user", func(t *testing.T) {
-		// Login to get a valid token
 		req := &models.LoginRequest{
 			Email:    "existing@example.com",
 			Password: "password123",
@@ -351,7 +344,6 @@ func TestAuthService_GetUserFromToken(t *testing.T) {
 			t.Fatalf("login failed: %v", err)
 		}
 
-		// Get user from token
 		user, err := svc.GetUserFromToken(token)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -381,14 +373,13 @@ func TestAuthService_GetUserFromToken(t *testing.T) {
 	})
 
 	t.Run("user not found in database", func(t *testing.T) {
-		// Create a valid token for a non-existent user
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
 			secret = "your-secret-key-change-this-in-production"
 		}
 
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id":  999, // Non-existent user
+			"user_id":  999,
 			"email":    "nonexistent@example.com",
 			"username": "nonexistent",
 			"exp":      time.Now().Add(24 * time.Hour).Unix(),
