@@ -3,8 +3,21 @@ package models
 type Book struct {
 	ID         int    `json:"id"`
 	ISBN       string `json:"isbn"`
-	Title      string `json:"title"`
-	TotalPages int    `json:"total_pages"`
+	Title      string `json:"title" binding:"required,min=1,max=500"`
+	TotalPages int    `json:"total_pages" binding:"required,min=1"`
+}
+
+func (b *Book) Validate() error {
+	if b.Title == "" {
+		return ErrInvalidInput("title cannot be empty")
+	}
+	if len(b.Title) > 500 {
+		return ErrInvalidInput("title cannot exceed 500 characters")
+	}
+	if b.TotalPages <= 0 {
+		return ErrInvalidInput("total_pages must be greater than 0")
+	}
+	return nil
 }
 
 type BookFilter struct {

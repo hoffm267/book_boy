@@ -53,7 +53,7 @@ func (pc *ProgressController) GetByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-	progress, err := pc.Service.GetByID(id)
+	progress, err := pc.Service.GetByIDWithCompletion(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -89,6 +89,13 @@ func (pc *ProgressController) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, progress)
 }
 
+type updateProgressReq struct {
+	BookPage      *int                   `json:"book_page"`
+	AudiobookTime *models.CustomDuration `json:"audiobook_time"`
+	BookID        *int                   `json:"book_id"`
+	AudiobookID   *int                   `json:"audiobook_id"`
+}
+
 func (pc *ProgressController) Update(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -117,20 +124,47 @@ func (pc *ProgressController) Update(c *gin.Context) {
 		return
 	}
 
-	var progress models.Progress
-	if err := c.ShouldBindJSON(&progress); err != nil {
+	var req updateProgressReq
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	progress.ID = id
-	progress.UserID = existing.UserID
+	if req.BookID != nil {
+		if err := pc.Service.SetBook(id, *req.BookID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
 
-	if err := pc.Service.Update(&progress); err != nil {
+	if req.AudiobookID != nil {
+		if err := pc.Service.SetAudiobook(id, *req.AudiobookID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	if req.BookPage != nil {
+		if err := pc.Service.UpdateProgressPage(id, *req.BookPage); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	if req.AudiobookTime != nil {
+		if err := pc.Service.UpdateProgressTime(id, req.AudiobookTime); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	updated, err := pc.Service.GetByIDWithCompletion(id)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, progress)
+
+	c.JSON(http.StatusOK, updated)
 }
 
 func (pc *ProgressController) Delete(c *gin.Context) {
@@ -229,6 +263,10 @@ func (pc *ProgressController) FilterProgress(c *gin.Context) {
 		if audiobookID, err := strconv.Atoi(audiobookIDStr); err == nil {
 			filter.AudiobookID = &audiobookID
 		}
+	}
+	if status := c.Query("status"); status != "" {
+		progressStatus := models.ProgressStatus(status)
+		filter.Status = &progressStatus
 	}
 
 	progresses, err := pc.Service.FilterProgress(filter)

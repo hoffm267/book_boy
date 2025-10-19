@@ -127,6 +127,22 @@ func (m *mockProgressRepo) FilterProgress(filter models.ProgressFilter) ([]model
 	return results, nil
 }
 
+func (m *mockProgressRepo) GetAllEnrichedByUser(userID int) ([]models.EnrichedProgress, error) {
+	if m.Err != nil {
+		return nil, m.Err
+	}
+	var results []models.EnrichedProgress
+	for _, prog := range m.Data {
+		if prog.UserID == userID {
+			results = append(results, models.EnrichedProgress{
+				Progress:          prog,
+				CompletionPercent: 0,
+			})
+		}
+	}
+	return results, nil
+}
+
 func TestProgressService(t *testing.T) {
 	mockData := map[int]models.Progress{
 		1: {
@@ -194,9 +210,11 @@ func TestProgressService(t *testing.T) {
 	})
 
 	t.Run("Update found", func(t *testing.T) {
+		bookID := 1
 		progress := models.Progress{
 			ID:       1,
 			UserID:   1,
+			BookID:   &bookID,
 			BookPage: ptrInt(15),
 		}
 		err := svc.Update(&progress)

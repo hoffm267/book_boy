@@ -9,6 +9,7 @@ import (
 type ProgressService interface {
 	GetAll() ([]models.Progress, error)
 	GetByID(id int) (*models.Progress, error)
+	GetByIDWithCompletion(id int) (*models.Progress, error)
 	Create(progress *models.Progress) (int, error)
 	Update(progress *models.Progress) error
 	Delete(id int) error
@@ -35,11 +36,26 @@ func (s *progressService) GetByID(id int) (*models.Progress, error) {
 	return s.repo.GetByID(id)
 }
 
+func (s *progressService) GetByIDWithCompletion(id int) (*models.Progress, error) {
+	progress, totalPages, totalLength, err := s.repo.GetByIDWithTotals(id)
+	if err != nil {
+		return nil, err
+	}
+	progress.CompletionPercent = calculateCompletionPercent(progress, totalPages, totalLength)
+	return progress, nil
+}
+
 func (s *progressService) Create(progress *models.Progress) (int, error) {
+	if err := progress.Validate(); err != nil {
+		return 0, err
+	}
 	return s.repo.Create(progress)
 }
 
 func (s *progressService) Update(progress *models.Progress) error {
+	if err := progress.Validate(); err != nil {
+		return err
+	}
 	return s.repo.Update(progress)
 }
 
@@ -95,13 +111,27 @@ func (s *progressService) UpdateProgressTime(progressID int, audiobookTime *mode
 }
 
 func (s *progressService) SetBook(id int, bookID int) error {
-
-	return nil
+	progress, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+	if progress == nil {
+		return fmt.Errorf("progress not found")
+	}
+	progress.BookID = &bookID
+	return s.repo.Update(progress)
 }
 
 func (s *progressService) SetAudiobook(id int, audiobookID int) error {
-
-	return nil
+	progress, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+	if progress == nil {
+		return fmt.Errorf("progress not found")
+	}
+	progress.AudiobookID = &audiobookID
+	return s.repo.Update(progress)
 }
 
 func (s *progressService) FilterProgress(filter models.ProgressFilter) ([]models.Progress, error) {

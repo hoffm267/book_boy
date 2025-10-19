@@ -49,9 +49,12 @@ func main() {
 	progressRepo := dl.NewProgressRepo(database)
 	progressService := bl.NewProgressService(progressRepo)
 
+	trackingService := bl.NewTrackingService(bookRepo, audiobookRepo, progressRepo)
+
 	bookController := controllers.NewBookController(bookService, progressService)
 	audiobookController := controllers.NewAudiobookController(audiobookService, progressService)
 	progressController := controllers.NewProgressController(progressService)
+	trackingController := controllers.NewTrackingController(trackingService)
 
 	r := gin.Default()
 
@@ -64,6 +67,7 @@ func main() {
 		audiobookController.RegisterRoutes(protected)
 		userController.RegisterRoutes(protected)
 		progressController.RegisterRoutes(protected)
+		trackingController.RegisterRoutes(protected)
 	}
 
 	r.Run(":8080")

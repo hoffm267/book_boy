@@ -33,10 +33,16 @@ func (s *bookService) GetByID(id int) (*models.Book, error) {
 }
 
 func (s *bookService) Create(book *models.Book) (int, error) {
+	if err := book.Validate(); err != nil {
+		return 0, err
+	}
 	return s.repo.Create(book)
 }
 
 func (s *bookService) Update(book *models.Book) error {
+	if err := book.Validate(); err != nil {
+		return err
+	}
 	return s.repo.Update(book)
 }
 

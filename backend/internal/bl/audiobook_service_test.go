@@ -105,7 +105,9 @@ func TestAudiobookService_Create(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{}
 	svc := NewAudiobookService(mockRepo)
 
-	audiobook := &models.Audiobook{Title: "New Book"}
+	duration := &models.CustomDuration{}
+	duration.Duration = 3600000000000
+	audiobook := &models.Audiobook{Title: "New Book", TotalLength: duration}
 	id, err := svc.Create(audiobook)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

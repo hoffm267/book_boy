@@ -63,8 +63,8 @@ func (r *bookRepo) GetByID(id int) (*models.Book, error) {
 func (r *bookRepo) Create(book *models.Book) (int, error) {
 	var id int
 	err := r.db.QueryRow(
-		"INSERT INTO books (isbn, title) VALUES ($1, $2) RETURNING id",
-		book.ISBN, book.Title,
+		"INSERT INTO books (isbn, title, total_pages) VALUES ($1, $2, $3) RETURNING id",
+		book.ISBN, book.Title, book.TotalPages,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -74,8 +74,8 @@ func (r *bookRepo) Create(book *models.Book) (int, error) {
 
 func (r *bookRepo) Update(book *models.Book) error {
 	_, err := r.db.Exec(
-		"UPDATE books SET isbn = $1, title = $2 WHERE id = $3",
-		book.ISBN, book.Title, book.ID,
+		"UPDATE books SET isbn = $1, title = $2, total_pages = $3 WHERE id = $4",
+		book.ISBN, book.Title, book.TotalPages, book.ID,
 	)
 	return err
 }

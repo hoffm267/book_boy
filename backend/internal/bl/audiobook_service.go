@@ -31,10 +31,16 @@ func (s *audiobookService) GetByID(id int) (*models.Audiobook, error) {
 }
 
 func (s *audiobookService) Create(audiobook *models.Audiobook) (int, error) {
+	if err := audiobook.Validate(); err != nil {
+		return 0, err
+	}
 	return s.repo.Create(audiobook)
 }
 
 func (s *audiobookService) Update(audiobook *models.Audiobook) error {
+	if err := audiobook.Validate(); err != nil {
+		return err
+	}
 	return s.repo.Update(audiobook)
 }
 
