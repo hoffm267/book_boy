@@ -26,7 +26,7 @@ services:
       - 8080:8080
     profiles: [backend_prod]
     environment:
-      #PLACEHOLDER UNTIL HOSTED
+      JWT_SECRET: ${JWT_SECRET}
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: postgres

@@ -22,13 +22,18 @@ func main() {
 	if os.Getenv("DB_HOST") == "" || os.Getenv("DB_PORT") == "" {
 		panic("Missing DB_HOST or DB_PORT env vars")
 	}
+	sslmode := os.Getenv("DB_SSLMODE")
+	if sslmode == "" {
+		sslmode = "disable"
+	}
 	connStr := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME"),
+		sslmode,
 	)
 
 	database := db.InitDB(connStr)

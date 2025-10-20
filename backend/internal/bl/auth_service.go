@@ -81,7 +81,7 @@ func (s *authService) Login(req *models.LoginRequest) (string, *models.User, err
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "your-secret-key-change-this-in-production"
+		return "", nil, errors.New("JWT_SECRET environment variable is required")
 	}
 
 	tokenString, err := token.SignedString([]byte(secret))
@@ -95,7 +95,7 @@ func (s *authService) Login(req *models.LoginRequest) (string, *models.User, err
 func (s *authService) ValidateToken(tokenString string) (*jwt.Token, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "your-secret-key-change-this-in-production"
+		return nil, errors.New("JWT_SECRET environment variable is required")
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
