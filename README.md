@@ -34,14 +34,21 @@ Book Boy automatically converts between book pages and audiobook timestamps. Thi
 ### Running Locally
 
 ```bash
-# Run tests and start everything in Docker
-./scripts/docker-test
+# Start database and backend
+./scripts/dev.sh
+
+# Run unit tests only
+make test
+
+# Run tests in Docker + start services
+make docker-test
 
 # Clean up (removes containers, volumes, and images)
 make clean
 ```
 
 **Base URL**: `http://localhost:8080`
+**Health Check**: `http://localhost:8080/health`
 
 ### Live API
 
@@ -127,6 +134,9 @@ All endpoints require `Authorization: Bearer <token>` header.
 - `PUT /users/:id` - Update user
 - `DELETE /users/:id` - Delete user
 
+**Health**
+- `GET /health` - Check API health status
+
 ### Example: Quick Start Tracking
 
 ```bash
@@ -211,17 +221,23 @@ Response:
 
 ---
 
-### Run Unit Tests
+### Testing
 
 ```bash
-# All tests
-go test ./...
+# Run unit tests (fast, no Docker required)
+make test
 
-# Specific service (e.g., auth tests)
-go test -v ./backend/internal/bl -run TestAuthService
+# Run specific test
+go test -v ./internal/bl -run TestAuthService
 
-# With coverage
+# Run with coverage
 go test -cover ./...
+
+# Full integration test (unit tests + Docker build + health check)
+./scripts/docker-test.sh
+
+# Or build Docker and start services only
+make docker-test
 ```
 
 ## Environment Variables
@@ -242,23 +258,26 @@ DB_NAME=book_boy
 ## Roadmap
 
 ### Completed
-- [x] JWT authentication with 24-hour token expiration
-- [x] Cross-format progress sync (page ↔ timestamp conversion)
+- [x] JWT authentication with 24 hour token expiration
+- [x] Cross format progress sync (page ↔ timestamp conversion)
 - [x] Fuzzy title search for books and audiobooks
 - [x] Progress filtering by user/book/audiobook/status
 - [x] Completion percentage calculation
 - [x] Tracking endpoints for simplified workflow
 - [x] Progress enrichment with book/audiobook details
-- [x] Input validation (two-layer: binding + custom)
+- [x] Input validation (two layer: binding + custom)
 - [x] Custom error types
 - [x] Multi stage Docker builds (test vs production)
 - [x] AWS ECS deployment with GitHub Actions CI/CD
-- [x] Docker tests
+- [x] Database migrations system
+- [x] Health check endpoint
+- [x] Production ready configuration (release mode)
 
-### Planned
+### Potential Future Additions
 - [ ] OpenLibrary API integration for auto populating book metadata
 - [ ] Find/Create audiobook information db
 - [ ] Pagination for large collections
 - [ ] OpenAPI/Swagger documentation
 - [ ] Reading statistics dashboard
 - [ ] Application Load Balancer for permanent API URL
+- [ ] Add Kubernetes in some way?

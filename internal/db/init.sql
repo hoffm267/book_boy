@@ -75,27 +75,3 @@ CREATE INDEX idx_books_user ON books(user_id);
 CREATE INDEX idx_audiobooks_user ON audiobooks(user_id);
 CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_audiobooks_title_trgm ON audiobooks USING gin (title gin_trgm_ops);
-
--- DATA
--- USERS (password for all test users is 'password123')
-INSERT INTO users (username, email, password_hash) VALUES
-  ('alice', 'alice@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO'),
-  ('bob', 'bob@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO'),
-  ('carol', 'carol@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO');
-
-INSERT INTO books (user_id, isbn, title, total_pages) VALUES
-  (1, '978-3-16-148410-0', 'Go Programming Language', 400),
-  (2, '978-0-13-110362-7', 'The C Programming Language', 274),
-  (3, '978-0-201-03801-7', 'Design Patterns', 395);
-
-INSERT INTO audiobooks (user_id, title, total_length) VALUES
-  (1, 'Clean Code', INTERVAL '9 hours 30 minutes'),
-  (2, 'Refactoring', INTERVAL '7 hours 45 minutes'),
-  (3, 'Effective Java', INTERVAL '10 hours 15 minutes');
-
--- PROGRESS
-INSERT INTO progress (user_id, book_id, audiobook_id, book_page, audiobook_time) VALUES
-  (1, 1, NULL, 50, NULL),
-  (2, NULL, 2, NULL, INTERVAL '1 hour 15 minutes'),
-  (3, 3, NULL, 120, NULL);
-

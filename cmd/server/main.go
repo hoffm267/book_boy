@@ -19,6 +19,10 @@ func main() {
 
 	_ = godotenv.Load()
 
+	if os.Getenv("GIN_MODE") == "" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	if os.Getenv("DB_HOST") == "" || os.Getenv("DB_PORT") == "" {
 		panic("Missing DB_HOST or DB_PORT env vars")
 	}
@@ -77,6 +81,10 @@ func main() {
 			return
 		}
 		c.Next()
+	})
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "healthy"})
 	})
 
 	authController.RegisterRoutes(r)

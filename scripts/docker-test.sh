@@ -2,13 +2,20 @@
 
 cd "$(dirname "$0")/.."
 
-echo "Building Docker image (tests run during build)..."
+echo "Running unit tests..."
+make test
+
+if [ $? -ne 0 ]; then
+    echo "Tests failed!"
+    exit 1
+fi
+
 echo ""
+echo "Building Docker image and starting services..."
 make docker-test
 
 if [ $? -ne 0 ]; then
-    echo ""
-    echo "Docker build failed (tests may have failed)!"
+    echo "Docker build failed!"
     exit 1
 fi
 
@@ -19,10 +26,10 @@ sleep 10
 echo ""
 echo "Testing API health..."
 
-HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/books 2>/dev/null || echo "000")
+HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health 2>/dev/null || echo "000")
 
-if [ "$HEALTH_CHECK" = "200" ] || [ "$HEALTH_CHECK" = "401" ]; then
-    echo "API is responding (HTTP $HEALTH_CHECK)"
+if [ "$HEALTH_CHECK" = "200" ]; then
+    echo "API is healthy (HTTP $HEALTH_CHECK)"
 else
     echo "API not responding (HTTP $HEALTH_CHECK)"
     echo ""
