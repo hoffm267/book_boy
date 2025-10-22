@@ -12,6 +12,5 @@ done
 
 echo "Database is ready!"
 echo "Starting backend server..."
-cd ./backend
 go run ./cmd/server/main.go
 

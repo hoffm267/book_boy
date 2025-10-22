@@ -4,7 +4,7 @@ backend-dev:
 	docker compose --profile db up -d
 
 test:
-	cd backend && JWT_SECRET=test-secret-for-unit-tests go test ./...
+	JWT_SECRET=test-secret-for-unit-tests go test ./...
 
 docker-test:
 	docker compose --profile docker-test up -d --build

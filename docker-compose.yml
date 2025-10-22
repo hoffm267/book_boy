@@ -13,7 +13,7 @@ services:
       - '5432:5432'
     volumes:
       - db:/var/lib/postgresql/data
-      - ./backend/internal/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./internal/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     profiles: [db, docker-test]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -23,7 +23,7 @@ services:
 
   backend-docker:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
       target: test
     ports:
