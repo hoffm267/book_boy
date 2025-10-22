@@ -2,6 +2,7 @@ package models
 
 type Book struct {
 	ID         int    `json:"id"`
+	UserID     int    `json:"user_id"`
 	ISBN       string `json:"isbn"`
 	Title      string `json:"title" binding:"required,min=1,max=500"`
 	TotalPages int    `json:"total_pages" binding:"required,min=1"`
@@ -22,6 +23,7 @@ func (b *Book) Validate() error {
 
 type BookFilter struct {
 	ID         *int
+	UserID     *int
 	ISBN       *string
 	Title      *string
 	TotalPages *int

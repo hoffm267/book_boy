@@ -2,6 +2,7 @@ package models
 
 type Audiobook struct {
 	ID          int             `json:"id"`
+	UserID      int             `json:"user_id"`
 	Title       string          `json:"title" binding:"required,min=1,max=500"`
 	TotalLength *CustomDuration `json:"total_length" binding:"required"`
 }

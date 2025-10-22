@@ -40,6 +40,7 @@ func (s *trackingService) StartTracking(userID int, req *models.StartTrackingReq
 			Title:      req.Title,
 			TotalPages: req.TotalPages,
 			ISBN:       req.ISBN,
+			UserID:     userID,
 		}
 		if err := book.Validate(); err != nil {
 			return nil, err
@@ -74,6 +75,7 @@ func (s *trackingService) StartTracking(userID int, req *models.StartTrackingReq
 		audiobook := &models.Audiobook{
 			Title:       req.Title,
 			TotalLength: duration,
+			UserID:      userID,
 		}
 		if err := audiobook.Validate(); err != nil {
 			return nil, err

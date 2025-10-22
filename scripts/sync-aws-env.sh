@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Fetching API URL..."
+echo "WARNING: Run after deployment completes (5-10 minutes after git push)"
 
 TASK_ARN=$(aws ecs list-tasks --cluster book-boy-cluster --service-name book-boy-service --query "taskArns[0]" --output text --region us-east-2)
 
@@ -24,9 +24,17 @@ if [ -z "$IP" ]; then
 fi
 
 echo ""
-echo "======================================"
 echo "API URL: http://$IP:8080"
-echo "======================================"
 echo ""
-echo "Test with:"
-echo "curl http://$IP:8080/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"username\":\"testuser\",\"email\":\"test@example.com\",\"password\":\"password123\"}'"
+
+BRUNO_FILE="bruno/environments/aws.bru"
+
+if [ ! -f "$BRUNO_FILE" ]; then
+  echo "Error: Bruno AWS environment file not found at $BRUNO_FILE"
+  exit 1
+fi
+
+sed -i "s|baseUrl: http://[0-9.]*:8080|baseUrl: http://$IP:8080|g" "$BRUNO_FILE"
+
+echo "Bruno AWS environment updated!"
+echo ""

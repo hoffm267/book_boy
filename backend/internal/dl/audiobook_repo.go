@@ -24,7 +24,7 @@ func NewAudiobookRepo(db *sql.DB) AudiobookRepo {
 }
 
 func (r *audiobookRepo) GetAll() ([]models.Audiobook, error) {
-	rows, err := r.db.Query("SELECT id, title, total_length FROM audiobooks")
+	rows, err := r.db.Query("SELECT id, user_id, title, total_length FROM audiobooks")
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (r *audiobookRepo) GetAll() ([]models.Audiobook, error) {
 	var audiobooks []models.Audiobook
 	for rows.Next() {
 		var audiobook models.Audiobook
-		if err := rows.Scan(&audiobook.ID, &audiobook.Title, &audiobook.TotalLength); err != nil {
+		if err := rows.Scan(&audiobook.ID, &audiobook.UserID, &audiobook.Title, &audiobook.TotalLength); err != nil {
 			return nil, err
 		}
 		audiobooks = append(audiobooks, audiobook)
@@ -42,10 +42,10 @@ func (r *audiobookRepo) GetAll() ([]models.Audiobook, error) {
 }
 
 func (r *audiobookRepo) GetByID(id int) (*models.Audiobook, error) {
-	row := r.db.QueryRow("SELECT id, title, total_length FROM audiobooks WHERE id = $1", id)
+	row := r.db.QueryRow("SELECT id, user_id, title, total_length FROM audiobooks WHERE id = $1", id)
 
 	var audiobook models.Audiobook
-	if err := row.Scan(&audiobook.ID, &audiobook.Title, &audiobook.TotalLength); err != nil {
+	if err := row.Scan(&audiobook.ID, &audiobook.UserID, &audiobook.Title, &audiobook.TotalLength); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -57,8 +57,8 @@ func (r *audiobookRepo) GetByID(id int) (*models.Audiobook, error) {
 func (r *audiobookRepo) Create(audiobook *models.Audiobook) (int, error) {
 	var id int
 	err := r.db.QueryRow(
-		"INSERT INTO audiobooks (title, total_length) VALUES ($1, $2) RETURNING id",
-		audiobook.Title, audiobook.TotalLength,
+		"INSERT INTO audiobooks (user_id, title, total_length) VALUES ($1, $2, $3) RETURNING id",
+		audiobook.UserID, audiobook.Title, audiobook.TotalLength,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -68,8 +68,8 @@ func (r *audiobookRepo) Create(audiobook *models.Audiobook) (int, error) {
 
 func (r *audiobookRepo) Update(audiobook *models.Audiobook) error {
 	_, err := r.db.Exec(
-		"UPDATE audiobooks SET title = $1, total_length = $2 WHERE id = $3",
-		audiobook.Title, audiobook.TotalLength, audiobook.ID,
+		"UPDATE audiobooks SET title = $1, total_length = $2 WHERE id = $3 AND user_id = $4",
+		audiobook.Title, audiobook.TotalLength, audiobook.ID, audiobook.UserID,
 	)
 	return err
 }
@@ -80,7 +80,7 @@ func (r *audiobookRepo) Delete(id int) error {
 }
 
 func (r *audiobookRepo) GetSimilarTitles(title string) ([]models.Audiobook, error) {
-	rows, err := r.db.Query("SELECT id, title, total_length FROM audiobooks WHERE title % $1 ORDER BY similarity(title, $1) DESC", title)
+	rows, err := r.db.Query("SELECT id, user_id, title, total_length FROM audiobooks WHERE title % $1 ORDER BY similarity(title, $1) DESC", title)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (r *audiobookRepo) GetSimilarTitles(title string) ([]models.Audiobook, erro
 	var audiobooks []models.Audiobook
 	for rows.Next() {
 		var audiobook models.Audiobook
-		if err := rows.Scan(&audiobook.ID, &audiobook.Title, &audiobook.TotalLength); err != nil {
+		if err := rows.Scan(&audiobook.ID, &audiobook.UserID, &audiobook.Title, &audiobook.TotalLength); err != nil {
 			return nil, err
 		}
 		audiobooks = append(audiobooks, audiobook)

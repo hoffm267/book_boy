@@ -31,12 +31,27 @@ func (ac *AudiobookController) RegisterRoutes(r gin.IRouter) {
 }
 
 func (ac *AudiobookController) GetAll(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
 	result, err := ac.Service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": result})
+
+	uid := userID.(int)
+	filtered := []models.Audiobook{}
+	for _, a := range result {
+		if a.UserID == uid {
+			filtered = append(filtered, a)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": filtered})
 }
 
 func (ac *AudiobookController) GetByID(c *gin.Context) {
@@ -72,21 +87,37 @@ func (ac *AudiobookController) Create(c *gin.Context) {
 		return
 	}
 
+	audiobook.UserID = userID.(int)
+
 	id, err := ac.Service.Create(&audiobook)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	progress = models.Progress{
-		UserID:      userID.(int),
-		AudiobookID: &id,
-	}
+	pgIDStr := c.Query("pgId")
+	if pgIDStr != "" {
+		pgID, err := strconv.Atoi(pgIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid audiobook id"})
+			return
+		}
 
-	_, err = ac.ProgressService.Create(&progress)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		if err := ac.ProgressService.SetAudiobook(pgID, id); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		progress = models.Progress{
+			UserID:      userID.(int),
+			AudiobookID: &id,
+		}
+
+		_, err = ac.ProgressService.Create(&progress)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	audiobook.ID = id
@@ -99,12 +130,21 @@ func (ac *AudiobookController) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 		return
 	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
 	var audiobook models.Audiobook
 	if err := c.ShouldBindJSON(&audiobook); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	audiobook.ID = id
+	audiobook.UserID = userID.(int)
+
 	if err := ac.Service.Update(&audiobook); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

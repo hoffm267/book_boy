@@ -1,38 +1,47 @@
 services:
   db:
-    image: postgres:14.1-alpine
-    restart: always
+    image: book_boy-postgres:14.1-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    restart: unless-stopped
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-postgres}
     ports:
       - '5432:5432'
-    volumes: 
+    volumes:
       - db:/var/lib/postgresql/data
       - ./backend/internal/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    profiles: [db]
+    profiles: [db, docker-test]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  cli:
-    build:
-      context: ./cli
-      dockerfile: Dockerfile
-    profiles: [cli]
-
-  backend_prod:
+  backend-docker:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: test
     ports:
       - 8080:8080
-    profiles: [backend_prod]
+    profiles: [docker-test]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
     environment:
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-this-in-production}
       DB_HOST: db
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: postgres
-  
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-postgres}
+      DB_SSLMODE: disable
+
 volumes:
   db:
     driver: local

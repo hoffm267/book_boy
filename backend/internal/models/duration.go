@@ -57,12 +57,43 @@ func (d CustomDuration) Value() (driver.Value, error) {
 }
 
 func parseHMS(hms string) string {
+	hms = strings.TrimSpace(hms)
 	parts := strings.Split(hms, ":")
-	if len(parts) != 3 {
+
+	var h, m, s int
+	var err error
+
+	switch len(parts) {
+	case 2:
+		h, err = strconv.Atoi(parts[0])
+		if err != nil {
+			return "0s"
+		}
+		m, err = strconv.Atoi(parts[1])
+		if err != nil {
+			return "0s"
+		}
+		s = 0
+	case 3:
+		h, err = strconv.Atoi(parts[0])
+		if err != nil {
+			return "0s"
+		}
+		m, err = strconv.Atoi(parts[1])
+		if err != nil {
+			return "0s"
+		}
+		s, err = strconv.Atoi(parts[2])
+		if err != nil {
+			return "0s"
+		}
+	default:
 		return "0s"
 	}
-	h, _ := strconv.Atoi(parts[0])
-	m, _ := strconv.Atoi(parts[1])
-	s, _ := strconv.Atoi(parts[2])
+
+	if h < 0 || m < 0 || m >= 60 || s < 0 || s >= 60 {
+		return "0s"
+	}
+
 	return fmt.Sprintf("%dh%dm%ds", h, m, s)
 }

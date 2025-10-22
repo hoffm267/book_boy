@@ -1,39 +1,41 @@
-.PHONY: cli-dev cli-prod backend-dev backend_prod clean
-
-#TODO: ADD THESE
-#docker exec -it book_boy-db-1 /bin/sh
-#psql -U postgres
-
-cli-dev:
-	ARGS="$(ARGS)" docker compose --profile cli_dev up
-
-cli-prod:
-	ARGS="$(ARGS)" docker compose --profile cli_prod up
+.PHONY: backend-dev docker-test test db-shell db-logs logs down stop clean
 
 backend-dev:
-	docker compose --profile db up -d; \
+	docker compose --profile db up -d
 
-backend-prod:
-	docker compose --profile backend_prod up -d
+test:
+	cd backend && JWT_SECRET=test-secret-for-unit-tests go test ./...
+
+docker-test:
+	docker compose --profile docker-test up -d --build
+
+db-shell:
+	docker exec -it $$(docker compose ps -q db) psql -U postgres
+
+db-logs:
+	docker compose logs -f db
+
+logs:
+	docker compose logs -f backend-docker
+
+down:
+	docker compose down
 
 stop:
-	@if [ -n "$$(docker ps -aq)" ]; then \
-		echo "Removing containers..."; \
-		docker rm -vf $$(docker ps -aq) > /dev/null 2>&1; \
-	else \
-		echo "No containers to remove."; \
-	fi
+	docker compose down
 
-clean: stop
-	@if [ -n "$$(docker images -aq)" ]; then \
-		echo "Removing images..."; \
-		docker rmi -f $$(docker images -aq) > /dev/null 2>&1; \
-	else \
-		echo "No images to remove."; \
-	fi
-	@if [ -n "$$(docker volume ls -q)" ]; then \
-		echo "Removing volumes..."; \
-		docker volume prune -a -f > /dev/null 2>&1; \
-	else \
-		echo "No volumes to remove."; \
-	fi
+clean:
+	@echo "Cleaning up Docker resources..."
+	@echo "Stopping and removing containers (all profiles)..."
+	docker compose --profile docker-test --profile db down -v --remove-orphans
+	@echo "Removing any remaining containers..."
+	@docker compose rm -f 2>/dev/null || true
+	@echo "Removing volumes..."
+	@docker volume rm book_boy_db 2>/dev/null || true
+	@echo "Removing images..."
+	@docker rmi book_boy-backend-docker 2>/dev/null || true
+	@docker rmi book_boy-postgres:14.1-alpine 2>/dev/null || true
+	@docker rmi book_boy-prod-test 2>/dev/null || true
+	@echo "Pruning system..."
+	@docker system prune -af --filter "label=com.docker.compose.project=book_boy" 2>/dev/null || true
+	@echo "Cleaned up all containers, volumes, and images"

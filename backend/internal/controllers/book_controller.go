@@ -32,7 +32,15 @@ func (bc *BookController) RegisterRoutes(r gin.IRouter) {
 }
 
 func (bc *BookController) GetAll(c *gin.Context) {
-	books, err := bc.Service.GetAll()
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	uid := userID.(int)
+	filter := models.BookFilter{UserID: &uid}
+	books, err := bc.Service.FilterBooks(filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -74,6 +82,8 @@ func (bc *BookController) Create(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
+
+	book.UserID = userID.(int)
 
 	id, err := bc.Service.Create(&book)
 	if err != nil {
@@ -119,12 +129,19 @@ func (bc *BookController) Update(c *gin.Context) {
 		return
 	}
 
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
 	var book models.Book
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	book.ID = id
+	book.UserID = userID.(int)
 
 	if err := bc.Service.Update(&book); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -171,7 +188,16 @@ func (bc *BookController) GetSimilarTitles(c *gin.Context) {
 }
 
 func (bc *BookController) FilterBooks(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	uid := userID.(int)
 	var filter models.BookFilter
+	filter.UserID = &uid
+
 	if idStr := c.Query("id"); idStr != "" {
 		if id, err := strconv.Atoi(idStr); err == nil {
 			filter.ID = &id

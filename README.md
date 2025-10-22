@@ -20,7 +20,7 @@ Book Boy automatically converts between book pages and audiobook timestamps. Thi
 - **REST API**: Endpoints for books, audiobooks, and progress tracking
 - **Similar Title Search**: Find books/audiobooks with fuzzy matching
 - **Progress Filtering**: Track reading progress per user across multiple books
-- **Test Coverage**: Comprehensive tests with Bruno API collections for manual testing
+- **Test Coverage**: Unit tests plus Bruno API collections for manual testing
 
 ---
 
@@ -31,18 +31,29 @@ Book Boy automatically converts between book pages and audiobook timestamps. Thi
 - Docker >= 20.x (with `docker compose` support)
 - Go 1.21+ (for local development)
 
-### Running the Application
+### Running Locally
 
 ```bash
-#MORE SCRIPTS BEING ADDED
-# Start database and backend (from project root)
-./scripts/book_boy
+# Run tests and start everything in Docker
+./scripts/docker-test
 
-# Clean up (removes DB image, preserves volume)
+# Clean up (removes containers, volumes, and images)
 make clean
 ```
 
 **Base URL**: `http://localhost:8080`
+
+### Live API
+
+The API is deployed on AWS ECS:
+- **Production**: `http://3.129.62.170:8080` *(IP may change with deployments)*
+- **Example Frontend to show implementation**: [book-boy-web.vercel.app](https://book-boy-web.vercel.app)
+
+### Deployment
+
+This project uses GitHub Actions for continuous deployment:
+
+**Why the IP changes:** The backend runs on AWS ECS Fargate without a load balancer. Each deployment creates a new container with a new IP address
 
 ---
 
@@ -240,12 +251,14 @@ DB_NAME=book_boy
 - [x] Progress enrichment with book/audiobook details
 - [x] Input validation (two-layer: binding + custom)
 - [x] Custom error types
+- [x] Multi stage Docker builds (test vs production)
+- [x] AWS ECS deployment with GitHub Actions CI/CD
+- [x] Docker tests
 
 ### Planned
 - [ ] OpenLibrary API integration for auto populating book metadata
-- [ ] Find/Create auddiobook information db
-- [ ] Minimal web frontend
-- [ ] Multi stage build for docker
+- [ ] Find/Create audiobook information db
 - [ ] Pagination for large collections
 - [ ] OpenAPI/Swagger documentation
 - [ ] Reading statistics dashboard
+- [ ] Application Load Balancer for permanent API URL

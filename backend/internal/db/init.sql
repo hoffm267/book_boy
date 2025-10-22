@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     isbn TEXT UNIQUE NOT NULL,
     title TEXT,
     total_pages INTEGER
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS books (
 
 CREATE TABLE IF NOT EXISTS audiobooks (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title TEXT,
     total_length INTERVAL
 );
@@ -66,10 +68,11 @@ BEFORE UPDATE ON progress
 FOR EACH ROW
 EXECUTE FUNCTION delete_orphaned_progress();
 
--- INDEXES
 CREATE INDEX idx_user_progress_user ON progress(user_id);
 CREATE INDEX idx_user_progress_book ON progress(book_id);
 CREATE INDEX idx_user_progress_audio ON progress(audiobook_id);
+CREATE INDEX idx_books_user ON books(user_id);
+CREATE INDEX idx_audiobooks_user ON audiobooks(user_id);
 CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_audiobooks_title_trgm ON audiobooks USING gin (title gin_trgm_ops);
 
@@ -80,17 +83,15 @@ INSERT INTO users (username, email, password_hash) VALUES
   ('bob', 'bob@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO'),
   ('carol', 'carol@example.com', '$2a$10$Pk5vERjoku3o0IE4lnlvm.eNjryEDqUCJPYdU/VHOUKTtxA9HvFNO');
 
--- BOOKS
-INSERT INTO books (isbn, title, total_pages) VALUES
-  ('978-3-16-148410-0', 'Go Programming Language', 400),
-  ('978-0-13-110362-7', 'The C Programming Language', 274),
-  ('978-0-201-03801-7', 'Design Patterns', 395);
+INSERT INTO books (user_id, isbn, title, total_pages) VALUES
+  (1, '978-3-16-148410-0', 'Go Programming Language', 400),
+  (2, '978-0-13-110362-7', 'The C Programming Language', 274),
+  (3, '978-0-201-03801-7', 'Design Patterns', 395);
 
--- AUDIOBOOKS
-INSERT INTO audiobooks (title, total_length) VALUES
-  ('Clean Code', INTERVAL '9 hours 30 minutes'),
-  ('Refactoring', INTERVAL '7 hours 45 minutes'),
-  ('Effective Java', INTERVAL '10 hours 15 minutes');
+INSERT INTO audiobooks (user_id, title, total_length) VALUES
+  (1, 'Clean Code', INTERVAL '9 hours 30 minutes'),
+  (2, 'Refactoring', INTERVAL '7 hours 45 minutes'),
+  (3, 'Effective Java', INTERVAL '10 hours 15 minutes');
 
 -- PROGRESS
 INSERT INTO progress (user_id, book_id, audiobook_id, book_page, audiobook_time) VALUES
