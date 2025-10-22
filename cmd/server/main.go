@@ -38,6 +38,11 @@ func main() {
 
 	database := db.InitDB(connStr)
 
+	fmt.Println("Running database migrations...")
+	if err := db.RunMigrations(database); err != nil {
+		panic(fmt.Sprintf("Failed to run migrations: %v", err))
+	}
+
 	bookRepo := dl.NewBookRepo(database)
 	bookService := bl.NewBookService(bookRepo)
 
