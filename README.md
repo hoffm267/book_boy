@@ -4,6 +4,9 @@
 
 **Never lose your place when switching between reading and listening.**
 
+## LOGIN FOR DEMO
+Email: demo@bookboy.app
+Password: Demo123!
 
 ## Summary
 
