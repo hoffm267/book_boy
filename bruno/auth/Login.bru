@@ -12,17 +12,18 @@ post {
 
 body:json {
   {
-    "email": "alice@example.com",
+    "email": "testuser@example.com",
     "password": "password123"
   }
-}
-
-settings {
-  encodeUrl: true
 }
 
 script:post-response {
   if (res.status === 200) {
     bru.setEnvVar("auth_token", res.body.token);
   }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
 }
