@@ -38,3 +38,15 @@ sed -i "s|baseUrl: http://[0-9.]*:8080|baseUrl: http://$IP:8080|g" "$BRUNO_FILE"
 
 echo "Bruno AWS environment updated!"
 echo ""
+
+# Update Vercel config
+VERCEL_FILE="../web/vercel.json"
+
+if [ -f "$VERCEL_FILE" ]; then
+  sed -i "s|http://[0-9.]*:8080|http://$IP:8080|g" "$VERCEL_FILE"
+  echo "Vercel config updated!"
+  echo "Run 'cd ../web && git add vercel.json && git commit -m \"Update backend IP\" && git push' to deploy"
+  echo ""
+else
+  echo "Warning: Vercel config not found at $VERCEL_FILE"
+fi

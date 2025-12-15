@@ -10,15 +10,15 @@ const (
 )
 
 type Progress struct {
-	ID                 int             `json:"id"`
-	UserID             int             `json:"user_id"`
-	BookID             *int            `json:"book_id,omitempty"`
-	AudiobookID        *int            `json:"audiobook_id,omitempty"`
-	BookPage           *int            `json:"book_page,omitempty" binding:"omitempty,min=1"`
-	AudiobookTime      *CustomDuration `json:"audiobook_time,omitempty"`
-	CompletionPercent  int             `json:"completion_percent,omitempty"`
-	CreatedAt          time.Time       `json:"created_at"`
-	UpdatedAt          time.Time       `json:"updated_at"`
+	ID                int             `json:"id"`
+	UserID            int             `json:"user_id"`
+	BookID            *int            `json:"book_id,omitempty"`
+	AudiobookID       *int            `json:"audiobook_id,omitempty"`
+	BookPage          *int            `json:"book_page,omitempty" binding:"omitempty,min=1"`
+	AudiobookTime     *CustomDuration `json:"audiobook_time,omitempty"`
+	CompletionPercent int             `json:"completion_percent,omitempty"`
+	CreatedAt         time.Time       `json:"created_at"`
+	UpdatedAt         time.Time       `json:"updated_at"`
 }
 
 func (p *Progress) Validate() error {

@@ -2,7 +2,11 @@ package bl
 
 import (
 	"book_boy/internal/dl"
+	"book_boy/internal/infra"
 	"book_boy/internal/models"
+	"context"
+	"fmt"
+	"time"
 )
 
 type AudiobookService interface {
@@ -15,11 +19,12 @@ type AudiobookService interface {
 }
 
 type audiobookService struct {
-	repo dl.AudiobookRepo
+	repo  dl.AudiobookRepo
+	cache *infra.Cache
 }
 
-func NewAudiobookService(repo dl.AudiobookRepo) AudiobookService {
-	return &audiobookService{repo: repo}
+func NewAudiobookService(repo dl.AudiobookRepo, cache *infra.Cache) AudiobookService {
+	return &audiobookService{repo: repo, cache: cache}
 }
 
 func (s *audiobookService) GetAll() ([]models.Audiobook, error) {
@@ -27,7 +32,25 @@ func (s *audiobookService) GetAll() ([]models.Audiobook, error) {
 }
 
 func (s *audiobookService) GetByID(id int) (*models.Audiobook, error) {
-	return s.repo.GetByID(id)
+	if s.cache != nil {
+		ctx := context.Background()
+		cacheKey := fmt.Sprintf("audiobook:%d", id)
+
+		var audiobook models.Audiobook
+		if err := s.cache.Get(ctx, cacheKey, &audiobook); err == nil {
+			return &audiobook, nil
+		}
+	}
+
+	result, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		s.cache.Set(context.Background(), fmt.Sprintf("audiobook:%d", id), result, 10*time.Minute)
+	}
+	return result, nil
 }
 
 func (s *audiobookService) Create(audiobook *models.Audiobook) (int, error) {
@@ -41,11 +64,23 @@ func (s *audiobookService) Update(audiobook *models.Audiobook) error {
 	if err := audiobook.Validate(); err != nil {
 		return err
 	}
-	return s.repo.Update(audiobook)
+	if err := s.repo.Update(audiobook); err != nil {
+		return err
+	}
+	if s.cache != nil {
+		s.cache.Delete(context.Background(), fmt.Sprintf("audiobook:%d", audiobook.ID))
+	}
+	return nil
 }
 
 func (s *audiobookService) Delete(id int) error {
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+	if s.cache != nil {
+		s.cache.Delete(context.Background(), fmt.Sprintf("audiobook:%d", id))
+	}
+	return nil
 }
 
 func (s *audiobookService) GetSimilarTitles(title string) ([]models.Audiobook, error) {

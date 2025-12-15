@@ -10,12 +10,17 @@ import (
 )
 
 type BookController struct {
-	Service         bl.BookService
-	ProgressService bl.ProgressService
+	Service             bl.BookService
+	ProgressService     bl.ProgressService
+	BookMetadataService *bl.BookMetadataService
 }
 
-func NewBookController(service bl.BookService, pgService bl.ProgressService) *BookController {
-	return &BookController{Service: service, ProgressService: pgService}
+func NewBookController(service bl.BookService, pgService bl.ProgressService, metadataService *bl.BookMetadataService) *BookController {
+	return &BookController{
+		Service:             service,
+		ProgressService:     pgService,
+		BookMetadataService: metadataService,
+	}
 }
 
 func (bc *BookController) RegisterRoutes(r gin.IRouter) {
@@ -74,6 +79,23 @@ func (bc *BookController) Create(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if book.ISBN != "" {
+		metadata, err := bc.BookMetadataService.GetBookByISBN(book.ISBN)
+		if err == nil {
+			if book.Title == "" && metadata.Title != nil {
+				book.Title = *metadata.Title
+			}
+			if book.TotalPages == 0 && metadata.TotalPages != nil {
+				book.TotalPages = *metadata.TotalPages
+			}
+		}
+	}
+
+	if book.ISBN == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "isbn is required"})
 		return
 	}
 

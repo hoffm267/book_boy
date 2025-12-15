@@ -2,13 +2,17 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
+	"book_boy/external/book_metadata"
 	"book_boy/internal/bl"
 	"book_boy/internal/controllers"
 	"book_boy/internal/db"
 	"book_boy/internal/dl"
+	"book_boy/internal/infra"
 	"book_boy/internal/middleware"
+	"book_boy/internal/workers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -47,8 +51,27 @@ func main() {
 		panic(fmt.Sprintf("Failed to run migrations: %v", err))
 	}
 
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		redisURL = "localhost:6379"
+	}
+	cache := infra.NewCache(redisURL)
+	fmt.Println("Connected to Redis:", redisURL)
+
+	rabbitmqURL := os.Getenv("RABBITMQ_URL")
+	if rabbitmqURL == "" {
+		rabbitmqURL = "amqp://guest:guest@localhost:5672/"
+	}
+	queue, err := infra.NewQueue(rabbitmqURL)
+	if err != nil {
+		log.Printf("Warning: Failed to connect to RabbitMQ: %v", err)
+	} else {
+		defer queue.Close()
+		fmt.Println("Connected to RabbitMQ:", rabbitmqURL)
+	}
+
 	bookRepo := dl.NewBookRepo(database)
-	bookService := bl.NewBookService(bookRepo)
+	bookService := bl.NewBookService(bookRepo, cache, queue)
 
 	userRepo := dl.NewUserRepo(database)
 	userService := bl.NewUserService(userRepo)
@@ -58,17 +81,35 @@ func main() {
 	authController := controllers.NewAuthController(authService)
 
 	audiobookRepo := dl.NewAudiobookRepo(database)
-	audiobookService := bl.NewAudiobookService(audiobookRepo)
+	audiobookService := bl.NewAudiobookService(audiobookRepo, cache)
 
 	progressRepo := dl.NewProgressRepo(database)
 	progressService := bl.NewProgressService(progressRepo)
 
 	trackingService := bl.NewTrackingService(bookRepo, audiobookRepo, progressRepo)
 
-	bookController := controllers.NewBookController(bookService, progressService)
+	bookMetadataServiceURL := os.Getenv("BOOK_METADATA_SERVICE_URL")
+	if bookMetadataServiceURL == "" {
+		bookMetadataServiceURL = "http://localhost:8000"
+	}
+	bookMetadataClient := book_metadata.NewClient(bookMetadataServiceURL)
+	bookMetadataService := bl.NewBookMetadataService(bookMetadataClient, cache)
+
+	if queue != nil {
+		metadataWorker := workers.NewMetadataWorker(queue, bookService, bookMetadataClient)
+		go func() {
+			if err := metadataWorker.Start(); err != nil {
+				log.Printf("Metadata worker error: %v", err)
+			}
+		}()
+		fmt.Println("Started metadata worker")
+	}
+
+	bookController := controllers.NewBookController(bookService, progressService, bookMetadataService)
 	audiobookController := controllers.NewAudiobookController(audiobookService, progressService)
 	progressController := controllers.NewProgressController(progressService)
 	trackingController := controllers.NewTrackingController(trackingService)
+	bookMetadataController := controllers.NewBookMetadataController(bookMetadataService)
 
 	r := gin.Default()
 
@@ -92,6 +133,7 @@ func main() {
 	protected := r.Group("")
 	protected.Use(middleware.AuthMiddleware(authService))
 	{
+		bookMetadataController.RegisterRoutes(protected)
 		bookController.RegisterRoutes(protected)
 		audiobookController.RegisterRoutes(protected)
 		userController.RegisterRoutes(protected)

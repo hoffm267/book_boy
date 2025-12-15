@@ -125,7 +125,6 @@ func (r *progressRepo) GetByIDWithTotals(id int) (*models.Progress, int, *models
 	return &pr, totalPages, totalLength, nil
 }
 
-
 func (r *progressRepo) FilterProgress(filter models.ProgressFilter) ([]models.Progress, error) {
 	query := "SELECT id, user_id, book_id, audiobook_id, book_page, audiobook_time, created_at, updated_at FROM progress"
 	var conditions []string

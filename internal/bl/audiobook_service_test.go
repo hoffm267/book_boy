@@ -69,7 +69,7 @@ func TestAudiobookService_GetAll(t *testing.T) {
 	}
 
 	mockRepo := &mockAudiobookRepo{Audiobooks: mockData}
-	svc := NewAudiobookService(mockRepo)
+	svc := NewAudiobookService(mockRepo, nil)
 
 	result, err := svc.GetAll()
 	if err != nil {
@@ -90,7 +90,7 @@ func TestAudiobookService_GetByID(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{
 		Audiobooks: []models.Audiobook{{ID: 1, Title: "One", TotalLength: &models.CustomDuration{Duration: d1}}},
 	}
-	svc := NewAudiobookService(mockRepo)
+	svc := NewAudiobookService(mockRepo, nil)
 
 	result, err := svc.GetByID(1)
 	if err != nil {
@@ -103,7 +103,7 @@ func TestAudiobookService_GetByID(t *testing.T) {
 
 func TestAudiobookService_Create(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{}
-	svc := NewAudiobookService(mockRepo)
+	svc := NewAudiobookService(mockRepo, nil)
 
 	duration := &models.CustomDuration{}
 	duration.Duration = 3600000000000
@@ -122,7 +122,7 @@ func TestAudiobookService_Create(t *testing.T) {
 
 func TestAudiobookService_Update(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{}
-	svc := NewAudiobookService(mockRepo)
+	svc := NewAudiobookService(mockRepo, nil)
 
 	d1 := time.Hour + 45*time.Minute + 30*time.Second
 	audiobook := &models.Audiobook{ID: 1, Title: "Updated Book", TotalLength: &models.CustomDuration{Duration: d1}}
@@ -137,7 +137,7 @@ func TestAudiobookService_Update(t *testing.T) {
 
 func TestAudiobookService_Delete(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{}
-	svc := NewAudiobookService(mockRepo)
+	svc := NewAudiobookService(mockRepo, nil)
 
 	err := svc.Delete(99)
 	if err != nil {
@@ -150,7 +150,7 @@ func TestAudiobookService_Delete(t *testing.T) {
 
 func TestAudiobookService_Errors(t *testing.T) {
 	mockRepo := &mockAudiobookRepo{Err: errors.New("db error")}
-	svc := NewAudiobookService(mockRepo)
+	svc := NewAudiobookService(mockRepo, nil)
 
 	if _, err := svc.GetAll(); err == nil {
 		t.Error("expected GetAll to return error")
@@ -177,7 +177,7 @@ func TestAudiobookService_GetSimilarTitles(t *testing.T) {
 			{ID: 2, Title: "The Catcher in the Rye", TotalLength: &models.CustomDuration{Duration: d1}},
 		},
 	}
-	svc := NewAudiobookService(mockRepo)
+	svc := NewAudiobookService(mockRepo, nil)
 
 	audiobooks, err := svc.GetSimilarTitles("Great")
 	if err != nil {

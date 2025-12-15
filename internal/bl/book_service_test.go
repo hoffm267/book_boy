@@ -113,7 +113,7 @@ func TestBookService_GetAll(t *testing.T) {
 			2: {ID: 2, ISBN: "2222", Title: "Test Book B", TotalPages: 500},
 		},
 	}
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	result, err := svc.GetAll()
 	if err != nil {
@@ -145,7 +145,7 @@ func TestBookService_GetByID(t *testing.T) {
 		Err: nil,
 	}
 
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	t.Run("found", func(t *testing.T) {
 		book, err := svc.GetByID(1)
@@ -170,7 +170,7 @@ func TestBookService_GetByID(t *testing.T) {
 
 func TestBookService_Create(t *testing.T) {
 	mockRepo := &mockBookRepo{Books: make(map[int]models.Book)}
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	book := &models.Book{ISBN: "3333", Title: "New Book", TotalPages: 123}
 	id, err := svc.Create(book)
@@ -188,7 +188,7 @@ func TestBookService_Update(t *testing.T) {
 			1: {ID: 1, ISBN: "1111", Title: "Old Title", TotalPages: 322},
 		},
 	}
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	book := &models.Book{ID: 1, ISBN: "1111", Title: "Updated Title", TotalPages: 700}
 	err := svc.Update(book)
@@ -206,7 +206,7 @@ func TestBookService_Delete(t *testing.T) {
 			1: {ID: 1, ISBN: "1111", Title: "Delete Me", TotalPages: 100},
 		},
 	}
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	err := svc.Delete(1)
 	if err != nil {
@@ -224,7 +224,7 @@ func TestBookService_GetByTitle(t *testing.T) {
 			2: {ID: 2, ISBN: "2222", Title: "Another Book", TotalPages: 300},
 		},
 	}
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	book, err := svc.GetByTitle("Unique Title")
 	if err != nil {
@@ -250,7 +250,7 @@ func TestBookService_GetSimilarTitles(t *testing.T) {
 			2: {ID: 2, ISBN: "2222", Title: "Lord of the Rings", TotalPages: 400},
 		},
 	}
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	books, err := svc.GetSimilarTitles("Potter")
 	if err != nil {
@@ -269,7 +269,7 @@ func TestBookService_FilterBooks(t *testing.T) {
 			3: {ID: 3, ISBN: "3333", Title: "Book C", TotalPages: 200},
 		},
 	}
-	svc := NewBookService(mockRepo)
+	svc := NewBookService(mockRepo, nil, nil)
 
 	pages := 200
 	filter := models.BookFilter{TotalPages: &pages}
