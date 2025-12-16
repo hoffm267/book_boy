@@ -2,8 +2,8 @@
   "family": "book-boy-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "256",
-  "memory": "512",
+  "cpu": "512",
+  "memory": "1024",
   "executionRoleArn": "arn:aws:iam::096435303842:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
@@ -36,6 +36,18 @@
         {
           "name": "DB_SSLMODE",
           "value": "require"
+        },
+        {
+          "name": "REDIS_URL",
+          "value": "your-elasticache-endpoint:6379"
+        },
+        {
+          "name": "RABBITMQ_URL",
+          "value": "amqp://admin:password@your-amazonmq-endpoint:5671"
+        },
+        {
+          "name": "BOOK_METADATA_SERVICE_URL",
+          "value": "http://localhost:8000"
         }
       ],
       "secrets": [
@@ -52,6 +64,25 @@
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/book_boy",
+          "awslogs-region": "us-east-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    },
+    {
+      "name": "book-metadata-service",
+      "image": "096435303842.dkr.ecr.us-east-2.amazonaws.com/book-metadata-service:latest",
+      "essential": false,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/book_boy_metadata_service",
           "awslogs-region": "us-east-2",
           "awslogs-stream-prefix": "ecs"
         }
