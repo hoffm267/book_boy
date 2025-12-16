@@ -1,0 +1,7 @@
+*.env
+*.vscode/
+
+# macOS
+.DS_Store
+
+*aws.bru

@@ -1,0 +1,23 @@
+meta {
+  name: UpdateByTime
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/progress/2/time
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  { "audiobook_time": "02:30:00" }
+}
+
+settings {
+  encodeUrl: true
+}

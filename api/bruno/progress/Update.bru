@@ -1,0 +1,32 @@
+meta {
+  name: Update
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/progress/1
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+        "id": null,
+        "user_id": null,
+        "book_id": null,
+        "audiobook_id": null,
+        "book_page": null,
+        "audiobook_time": null,
+        "created_at": null,
+        "updated_at": null
+  }
+}
+
+settings {
+  encodeUrl: true
+}

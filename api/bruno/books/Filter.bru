@@ -1,0 +1,23 @@
+meta {
+  name: Filter
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/books/filter?total_pages=500
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+params:query {
+  total_pages: 500
+}
+
+settings {
+  encodeUrl: true
+}

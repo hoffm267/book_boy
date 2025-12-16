@@ -1,0 +1,23 @@
+meta {
+  name: Filter
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/progress/filter?user_id=1
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+params:query {
+  user_id: 1
+}
+
+settings {
+  encodeUrl: true
+}

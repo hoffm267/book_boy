@@ -1,0 +1,23 @@
+meta {
+  name: GetSimilarTitles
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/audiobooks/search?title=Clean
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+params:query {
+  title: Clean
+}
+
+settings {
+  encodeUrl: true
+}

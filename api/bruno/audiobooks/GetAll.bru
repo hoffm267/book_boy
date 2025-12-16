@@ -1,0 +1,19 @@
+meta {
+  name: GetAll
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/audiobooks
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+}

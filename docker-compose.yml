@@ -1,9 +1,6 @@
 services:
   db:
-    image: book_boy-postgres:14.1-alpine
-    build:
-      context: .
-      dockerfile: Dockerfile.postgres
+    image: postgres:14.1-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
@@ -12,38 +9,105 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - db:/var/lib/postgresql/data
-      - ./internal/db/init.sql:/docker-entrypoint-initdb.d/01_init.sql
-      - ./internal/db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
-    profiles: [db, docker-test]
+      - db_data:/var/lib/postgresql/data
+      - ./api/internal/db/init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./api/internal/db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  backend-docker:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  book-metadata-service:
     build:
-      context: .
+      context: ./book_metadata_service
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  api:
+    build:
+      context: ./api
       dockerfile: Dockerfile
       target: test
     ports:
-      - 8080:8080
-    profiles: [docker-test]
+      - '8080:8080'
     depends_on:
       db:
         condition: service_healthy
-    restart: on-failure
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      book-metadata-service:
+        condition: service_healthy
+    restart: unless-stopped
     environment:
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-this-in-production}
+      JWT_SECRET: ${JWT_SECRET:-my-local-dev-secret-key}
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-postgres}
       DB_SSLMODE: disable
-      BOOK_METADATA_SERVICE_URL: http://localhost:8000
+      BOOK_METADATA_SERVICE_URL: http://book-metadata-service:8000
+      REDIS_URL: redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    volumes:
+      - ./api:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - '5173:5173'
+    depends_on:
+      - api
+    environment:
+      VITE_API_URL: http://localhost:8080
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    command: npm run dev -- --host
 
 volumes:
-  db:
+  db_data:
     driver: local

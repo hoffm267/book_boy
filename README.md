@@ -20,10 +20,11 @@ Book Boy automatically converts between book pages and audiobook timestamps. Thi
 
 - **Bidirectional Sync**: Update book page → get audiobook time, or vice versa
 - **JWT Authentication**: Secure user registration and login with 24 hour token expiration
+- **ISBN Metadata Fetch**: Add books by ISBN, worker auto-fills title/pages via OpenLibrary API
+- **RabbitMQ Workers**: Asynchronous background processing for metadata
+- **Redis Caching**: Fast metadata lookups
 - **REST API**: Endpoints for books, audiobooks, and progress tracking
-- **Similar Title Search**: Find books/audiobooks with fuzzy matching
 - **Progress Filtering**: Track reading progress per user across multiple books
-- **Test Coverage**: Unit tests plus Bruno API collections for manual testing
 
 ---
 
@@ -37,16 +38,12 @@ Book Boy automatically converts between book pages and audiobook timestamps. Thi
 ### Running Locally
 
 ```bash
-# Start database and backend
+cd api
+
 ./scripts/dev.sh
 
-# Run unit tests only
 make test
 
-# Run tests in Docker + start services
-make docker-test
-
-# Clean up (removes containers, volumes, and images)
 make clean
 ```
 
@@ -55,15 +52,15 @@ make clean
 
 ### Live API
 
-The API is deployed on AWS ECS:
-- **Production**: `http://3.129.62.170:8080` *(IP may change with deployments)*
-- **Example Frontend to show implementation**: [book-boy-web.vercel.app](https://book-boy-web.vercel.app)
+**Production**: `http://3.146.159.19:8080`
+**Frontend**: [book-boy-web.vercel.app](https://book-boy-web.vercel.app)
 
 ### Deployment
 
-This project uses GitHub Actions for continuous deployment:
-
-**Why the IP changes:** The backend runs on AWS ECS Fargate without a load balancer. Each deployment creates a new container with a new IP address
+Deployed on AWS EC2 with GitHub Actions for continuous deployment:
+- Push to `main` → GitHub Actions builds Docker images
+- Images pushed to Amazon ECR
+- Automatic deployment to EC2 instance
 
 ---
 
@@ -72,7 +69,6 @@ This project uses GitHub Actions for continuous deployment:
 ### Authentication (Public)
 
 ```bash
-# Register new user
 POST /auth/register
 Content-Type: application/json
 
@@ -82,7 +78,6 @@ Content-Type: application/json
   "password": "password123"
 }
 
-# Login (returns JWT token)
 POST /auth/login
 Content-Type: application/json
 
@@ -105,7 +100,7 @@ All endpoints require `Authorization: Bearer <token>` header.
 **Books**
 - `GET /books` - List all books
 - `GET /books/:id` - Get specific book
-- `POST /books` - Create new book
+- `POST /books` - Create new book (ISBN optional, auto-fills if provided)
 - `PUT /books/:id` - Update book
 - `DELETE /books/:id` - Delete book
 - `GET /books/search?title=...` - Fuzzy search by title
@@ -127,6 +122,9 @@ All endpoints require `Authorization: Bearer <token>` header.
 - `DELETE /progress/:id` - Delete progress
 - `GET /progress/filter?...` - Filter by user/book/audiobook/status
 
+**Metadata**
+- `GET /metadata/isbn/:isbn` - Fetch book metadata by ISBN
+
 **Quick Start Tracking**
 - `POST /tracking/start` - Create book/audiobook and progress in one call
 - `GET /tracking/current` - Get enriched progress with full book/audiobook details
@@ -140,10 +138,38 @@ All endpoints require `Authorization: Bearer <token>` header.
 **Health**
 - `GET /health` - Check API health status
 
+### Example: Add Book by ISBN
+
+```bash
+POST /books
+Authorization: Bearer <token>
+
+{
+  "isbn": "9780316769174"
+}
+
+Response:
+{
+  "id": 1,
+  "isbn": "9780316769174",
+  "title": "",
+  "total_pages": 0
+}
+```
+
+Worker automatically fetches metadata and updates:
+```bash
+{
+  "id": 1,
+  "isbn": "9780316769174",
+  "title": "The Catcher in the Rye",
+  "total_pages": 277
+}
+```
+
 ### Example: Quick Start Tracking
 
 ```bash
-# Start tracking a book (creates book + progress in one call)
 POST /tracking/start
 Authorization: Bearer <token>
 
@@ -155,7 +181,6 @@ Authorization: Bearer <token>
   "current_page": 50
 }
 
-# View all current reading/listening
 GET /tracking/current
 Authorization: Bearer <token>
 
@@ -178,7 +203,6 @@ Response:
 ### Example: Manual Progress Tracking
 
 ```bash
-# Create book and audiobook separately
 POST /books
 {
   "title": "The Great Gatsby",
@@ -191,7 +215,6 @@ POST /audiobooks
   "total_length": "04:49:00"
 }
 
-# Link them with progress tracking
 POST /progress
 {
   "book_id": 1,
@@ -205,10 +228,9 @@ Response:
   "book_id": 1,
   "audiobook_id": 1,
   "book_page": 90,
-  "audiobook_time": "02:24:30"  // Auto calculated
+  "audiobook_time": "02:24:30"
 }
 
-# Update progress (updates both formats)
 PUT /progress/1
 {
   "book_page": 135
@@ -217,30 +239,23 @@ PUT /progress/1
 Response:
 {
   "book_page": 135,
-  "audiobook_time": "03:36:45",  // Auto calculated
+  "audiobook_time": "03:36:45",
   "completion_percent": 75
 }
 ```
 
 ---
 
-### Testing
+## Testing
 
 ```bash
-# Run unit tests (fast, no Docker required)
 make test
 
-# Run specific test
-go test -v ./internal/bl -run TestAuthService
+go test -v ./internal/service -run TestAuthService
 
-# Run with coverage
 go test -cover ./...
 
-# Full integration test (unit tests + Docker build + health check)
 ./scripts/docker-test.sh
-
-# Or build Docker and start services only
-make docker-test
 ```
 
 ## Environment Variables
@@ -253,34 +268,32 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
-DB_NAME=book_boy
+DB_NAME=postgres
+DB_SSLMODE=disable
+RABBITMQ_PASSWORD=your-rabbitmq-password
+REDIS_URL=localhost:6379
+RABBITMQ_URL=amqp://guest:guest@localhost:5672/
+BOOK_METADATA_SERVICE_URL=http://localhost:8000
 ```
 
 ---
 
-## Roadmap
+## Architecture
 
-### Completed
-- [x] JWT authentication with 24 hour token expiration
-- [x] Cross format progress sync (page ↔ timestamp conversion)
-- [x] Fuzzy title search for books and audiobooks
-- [x] Progress filtering by user/book/audiobook/status
-- [x] Completion percentage calculation
-- [x] Tracking endpoints for simplified workflow
-- [x] Progress enrichment with book/audiobook details
-- [x] Input validation (two layer: binding + custom)
-- [x] Custom error types
-- [x] Multi stage Docker builds (test vs production)
-- [x] AWS ECS deployment with GitHub Actions CI/CD
-- [x] Database migrations system
-- [x] Health check endpoint
-- [x] Production ready configuration (release mode)
+**Monorepo Structure:**
+```
+book_boy/
+├── api/                      # Go REST API
+├── book_metadata_service/    # Python microservice (OpenLibrary API)
+├── web/                      # React frontend
+└── .github/workflows/        # CI/CD pipelines
+```
 
-### Potential Future Additions
-- [ ] OpenLibrary API integration for auto populating book metadata
-- [ ] Find/Create audiobook information db
-- [ ] Pagination for large collections
-- [ ] OpenAPI/Swagger documentation
-- [ ] Reading statistics dashboard
-- [ ] Application Load Balancer for permanent API URL
-- [ ] Add Kubernetes in some way?
+**Infrastructure:**
+- **API**: Go + Gin framework
+- **Database**: PostgreSQL
+- **Cache**: Redis
+- **Queue**: RabbitMQ
+- **Metadata**: Python FastAPI microservice
+- **Deployment**: AWS EC2 + ECR
+- **Frontend**: React + Vite (Vercel)

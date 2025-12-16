@@ -1,0 +1,27 @@
+meta {
+  name: Create
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/books
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "isbn": "123-456-123",
+    "title": "TestTitle",
+    "total_pages": 69
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Update
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/audiobooks/1
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "title": "Updated Audiobook Title",
+    "total_length": "6 hours 15 minutes"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

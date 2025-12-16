@@ -1,0 +1,23 @@
+meta {
+  name: GetSimilarTitles
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/books/search?title=Go
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+params:query {
+  title: Go
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,7 +1,52 @@
+# Environment files
 *.env
-*.vscode/
+!.env.example
+
+# IDE
+.vscode/
+.idea/
 
 # macOS
 .DS_Store
 
-*aws.bru
+# Logs
+*.log
+
+# Build outputs
+bin/
+dist/
+build/
+.next/
+
+# Dependencies
+node_modules/
+__pycache__/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# AWS Bruno environment (contains IPs)
+**/bruno/environments/aws.bru
+
+# Deployment info
+book-boy-ec2-info.txt
