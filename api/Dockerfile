@@ -20,7 +20,8 @@ FROM base AS builder
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server
 
 FROM alpine:latest AS production
-RUN apk --no-cache add ca-certificates curl
+RUN apk --no-cache --no-scripts add ca-certificates curl && \
+    apk fix --no-scripts
 WORKDIR /app
 COPY --from=builder /build/main .
 EXPOSE 8080
