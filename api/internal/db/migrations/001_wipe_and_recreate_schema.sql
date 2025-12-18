@@ -2,6 +2,9 @@
 -- Date: 2025-10-22
 -- WARNING: This drops all existing data
 
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- Drop existing tables (cascade to drop dependent objects)
 DROP TABLE IF EXISTS progress CASCADE;
 DROP TABLE IF EXISTS books CASCADE;
