@@ -80,7 +80,6 @@ func (s *progressService) UpdateProgressPage(id, bookPage int) error {
 	}
 	progress.BookPage = &bookPage
 
-	// if audiobook total length available, compute & set AudiobookTime
 	if totalLength != nil && totalLength.Duration > 0 {
 		ts, _ := pageToTimestamp(totalPages, bookPage, totalLength.Duration)
 		cd := domain.CustomDuration{Duration: ts}
@@ -101,7 +100,6 @@ func (s *progressService) UpdateProgressTime(progressID int, audiobookTime *doma
 
 	pr.AudiobookTime = audiobookTime
 
-	// if we have book total pages and audio total length, compute page
 	if pr.BookID != nil && totalPages > 0 && totalLength != nil && totalLength.Duration > 0 {
 		page, _ := timestampToPage(totalPages, audiobookTime.Duration, totalLength.Duration)
 		pr.BookPage = &page
@@ -118,8 +116,27 @@ func (s *progressService) SetBook(id int, bookID int) error {
 	if progress == nil {
 		return fmt.Errorf("progress not found")
 	}
+
 	progress.BookID = &bookID
-	return s.repo.Update(progress)
+
+	if err := s.repo.Update(progress); err != nil {
+		return err
+	}
+
+	progress, totalPages, totalLength, err := s.repo.GetByIDWithTotals(id)
+	if err != nil {
+		return err
+	}
+
+	if progress.AudiobookTime != nil && totalPages > 0 && totalLength != nil && totalLength.Duration > 0 {
+		page, err := timestampToPage(totalPages, progress.AudiobookTime.Duration, totalLength.Duration)
+		if err == nil {
+			progress.BookPage = &page
+			return s.repo.Update(progress)
+		}
+	}
+
+	return nil
 }
 
 func (s *progressService) SetAudiobook(id int, audiobookID int) error {
@@ -130,8 +147,28 @@ func (s *progressService) SetAudiobook(id int, audiobookID int) error {
 	if progress == nil {
 		return fmt.Errorf("progress not found")
 	}
+
 	progress.AudiobookID = &audiobookID
-	return s.repo.Update(progress)
+
+	if err := s.repo.Update(progress); err != nil {
+		return err
+	}
+
+	progress, totalPages, totalLength, err := s.repo.GetByIDWithTotals(id)
+	if err != nil {
+		return err
+	}
+
+	if progress.BookPage != nil && totalPages > 0 && totalLength != nil && totalLength.Duration > 0 {
+		ts, err := pageToTimestamp(totalPages, *progress.BookPage, totalLength.Duration)
+		if err == nil {
+			cd := domain.CustomDuration{Duration: ts}
+			progress.AudiobookTime = &cd
+			return s.repo.Update(progress)
+		}
+	}
+
+	return nil
 }
 
 func (s *progressService) FilterProgress(filter repository.ProgressFilter) ([]domain.Progress, error) {
