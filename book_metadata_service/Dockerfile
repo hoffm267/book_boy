@@ -12,7 +12,23 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.12-alpine
+FROM python:3.12-alpine AS development
+
+WORKDIR /app
+
+COPY --from=builder /opt/venv /opt/venv
+
+COPY events.py .
+COPY consumer.py .
+
+ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 8000
+
+CMD ["python", "consumer.py"]
+
+FROM python:3.12-alpine AS production
 
 WORKDIR /app
 

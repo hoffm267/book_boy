@@ -48,6 +48,7 @@ services:
     build:
       context: ./book_metadata_service
       dockerfile: Dockerfile
+      target: development
     ports:
       - '8000:8000'
     restart: unless-stopped
@@ -60,7 +61,8 @@ services:
   api:
     build:
       context: ./api
-      dockerfile: Dockerfile.debug
+      dockerfile: Dockerfile
+      target: debug
     ports:
       - '8080:8080'
       - '2345:2345'
@@ -100,7 +102,8 @@ services:
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: development
     ports:
       - '5173:5173'
     depends_on:
@@ -110,7 +113,6 @@ services:
     volumes:
       - ./web:/app
       - /app/node_modules
-    command: npm run dev -- --host
 
 volumes:
   db_data:

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import ProgressModal from './ProgressModal'
+import BookModal from './BookModal'
 
 function Progress({ token, apiUrl, userId }) {
     const [progressList, setProgressList] = useState([])
@@ -7,6 +8,8 @@ function Progress({ token, apiUrl, userId }) {
     const [audiobooks, setAudiobooks] = useState([])
     const [showModal, setShowModal] = useState(false)
     const [editingProgress, setEditingProgress] = useState(null)
+    const [showBookModal, setShowBookModal] = useState(false)
+    const [showAudiobookModal, setShowAudiobookModal] = useState(false)
 
     useEffect(() => {
         fetchProgress()
@@ -151,9 +154,13 @@ function Progress({ token, apiUrl, userId }) {
         <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2>Reading Progress</h2>
+        <div style={{ display: 'flex', gap: '10px' }}>
+        <button onClick={() => setShowBookModal(true)} className="btn">+ Book</button>
+        <button onClick={() => setShowAudiobookModal(true)} className="btn">+ Audiobook</button>
         <button onClick={() => { setEditingProgress(null); setShowModal(true); }} className="btn btn-primary">
-        + Start Tracking
+        + Track Progress
         </button>
+        </div>
         </div>
 
         {progressList.length === 0 ? (
@@ -218,6 +225,26 @@ function Progress({ token, apiUrl, userId }) {
             apiUrl={apiUrl}
             onClose={() => setShowModal(false)}
             onSave={handleModalSave}
+            />
+        )}
+
+        {showBookModal && (
+            <BookModal
+            type="book"
+            token={token}
+            apiUrl={apiUrl}
+            onClose={() => setShowBookModal(false)}
+            onSave={() => { setShowBookModal(false); fetchBooks(); }}
+            />
+        )}
+
+        {showAudiobookModal && (
+            <BookModal
+            type="audiobook"
+            token={token}
+            apiUrl={apiUrl}
+            onClose={() => setShowAudiobookModal(false)}
+            onSave={() => { setShowAudiobookModal(false); fetchAudiobooks(); }}
             />
         )}
         </>
