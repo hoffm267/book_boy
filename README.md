@@ -1,4 +1,4 @@
-# Book Boy
+# Book Boy: https://book-boy-web.vercel.app
 
 > A simple tracker that synchronizes progress between physical books and audiobooks
 
@@ -53,7 +53,7 @@ make clean
 ### Live API
 
 **Production**: `http://3.146.159.19:8080`
-**Frontend**: [book-boy-web.vercel.app](https://book-boy-web.vercel.app)
+**Frontend**: [Book Boy](https://book-boy-web.vercel.app)
 
 ### Deployment
 
