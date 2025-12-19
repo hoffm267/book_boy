@@ -62,5 +62,8 @@ jobs:
           script: |
             cd ~/book_boy
             docker-compose -f docker-compose.production.yml pull book-metadata-service
+            docker images 096435303842.dkr.ecr.us-east-2.amazonaws.com/book-metadata-service --format "{{.ID}} {{.CreatedAt}}" | \
+              sort -k2 -r | tail -n +3 | awk '{print $1}' | xargs -r docker rmi -f || true
+            docker image prune -f
             docker-compose -f docker-compose.production.yml up -d book-metadata-service
             docker-compose -f docker-compose.production.yml ps
