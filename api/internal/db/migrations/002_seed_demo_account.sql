@@ -21,13 +21,13 @@ BEGIN
         RETURN;
     END IF;
 
-    INSERT INTO books (user_id, isbn, title, total_pages)
+    INSERT INTO books (isbn, title, total_pages)
     VALUES
-        (demo_user_id, '9780544003415', 'The Lord of the Rings', 1178),
-        (demo_user_id, '9780451524935', '1984', 328),
-        (demo_user_id, '9780061120084', 'To Kill a Mockingbird', 324),
-        (demo_user_id, '9780143127550', 'Dune', 688),
-        (demo_user_id, '9780316769174', 'The Catcher in the Rye', 277)
+        ('9780544003415', 'The Lord of the Rings', 1178),
+        ('9780451524935', '1984', 328),
+        ('9780061120084', 'To Kill a Mockingbird', 324),
+        ('9780143127550', 'Dune', 688),
+        ('9780316769174', 'The Catcher in the Rye', 277)
     ON CONFLICT (isbn) DO NOTHING;
 
     INSERT INTO audiobooks (user_id, title, total_length)
@@ -49,8 +49,7 @@ BEGIN
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     FROM books b
-    WHERE b.user_id = demo_user_id
-        AND b.title IN ('The Lord of the Rings', '1984', 'Dune')
+    WHERE b.title IN ('The Lord of the Rings', '1984', 'Dune')
     ON CONFLICT DO NOTHING;
 
     INSERT INTO progress (user_id, audiobook_id, audiobook_time, created_at, updated_at)

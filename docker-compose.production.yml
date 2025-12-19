@@ -62,7 +62,7 @@ services:
     container_name: book-metadata-service
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "pgrep", "-f", "consumer.py"]
       interval: 10s
       timeout: 5s
       retries: 3

@@ -21,13 +21,13 @@ type BookService interface {
 }
 
 type bookService struct {
-	repo  repository.BookRepo
-	cache *infra.Cache
-	queue *infra.Queue
+	repo      repository.BookRepo
+	cache     *infra.Cache
+	publisher *infra.EventPublisher
 }
 
-func NewBookService(repo repository.BookRepo, cache *infra.Cache, queue *infra.Queue) BookService {
-	return &bookService{repo: repo, cache: cache, queue: queue}
+func NewBookService(repo repository.BookRepo, cache *infra.Cache, publisher *infra.EventPublisher) BookService {
+	return &bookService{repo: repo, cache: cache, publisher: publisher}
 }
 
 func (s *bookService) GetAll() ([]domain.Book, error) {
@@ -66,13 +66,14 @@ func (s *bookService) Create(book *domain.Book) (int, error) {
 		return 0, err
 	}
 
-	if s.queue != nil && book.ISBN != "" {
-		job := infra.MetadataFetchJob{
-			BookID: bookID,
-			ISBN:   book.ISBN,
+	if s.publisher != nil && book.ISBN != "" {
+		event := domain.BookCreatedEvent{
+			BookID:    bookID,
+			ISBN:      book.ISBN,
+			CreatedAt: time.Now().Format(time.RFC3339),
 		}
-		if err := s.queue.Publish("metadata_fetch", job); err != nil {
-			fmt.Printf("Warning: failed to queue metadata fetch: %v\n", err)
+		if err := s.publisher.Publish("book.created", event); err != nil {
+			fmt.Printf("Warning: failed to publish book.created event: %v\n", err)
 		}
 	}
 
@@ -87,9 +88,7 @@ func (s *bookService) Update(book *domain.Book) error {
 		return err
 	}
 	if s.cache != nil {
-		if err := s.cache.Delete(context.Background(), fmt.Sprintf("book:%d", book.ID)); err != nil {
-			return err
-		}
+		s.cache.Delete(context.Background(), fmt.Sprintf("book:%d", book.ID))
 	}
 	return nil
 }

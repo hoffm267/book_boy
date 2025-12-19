@@ -12,6 +12,35 @@ function Progress({ token, apiUrl, userId }) {
         fetchProgress()
         fetchBooks()
         fetchAudiobooks()
+        console.log('Setting up SSE connection...')
+        const eventSource = new EventSource(`${apiUrl}/events?token=${token}`)
+
+        eventSource.onopen = () => {
+            console.log('SSE connection opened')
+        }
+
+        eventSource.addEventListener('book.metadata_fetched', (e) => {
+            console.log('Received book.metadata_fetched event:', e.data)
+            const updatedBook = JSON.parse(e.data)
+            console.log('Updating book:', updatedBook)
+            setBooks(prev => {
+                const updated = prev.map(book =>
+                    book.id === updatedBook.id ? updatedBook : book
+                )
+                console.log('Updated books list:', updated)
+                return updated
+            })
+        })
+
+        eventSource.onerror = (err) => {
+            console.error('SSE error:', err)
+            console.error('EventSource readyState:', eventSource.readyState)
+        }
+
+        return () => {
+            console.log('Closing SSE connection')
+            eventSource.close()
+        }
     }, [])
 
     const fetchProgress = async () => {
@@ -72,7 +101,6 @@ function Progress({ token, apiUrl, userId }) {
 
     const handleEditClick = (progress) => {
         setEditingProgress(progress)
-        console.log("HERE PLS")
         setShowModal(true)
     }
 
@@ -98,6 +126,21 @@ function Progress({ token, apiUrl, userId }) {
             const book = books.find(b => b.id === progress.book_id)
             if (book && book.total_pages) {
                 return Math.round((progress.book_page / book.total_pages) * 100)
+            }
+        }
+        else if (progress.audiobook_id && progress.audiobook_time && Array.isArray(audiobooks)) {
+            const audiobook = audiobooks.find(ab => ab.id === progress.audiobook_id)
+            if (audiobook && audiobook.total_length) {
+                const totalSeconds = timeString =>
+                    timeString.split(':').reduce(
+                        (sum, part, i) => sum + part * [3600, 60, 1][i],
+                        0
+                    );
+                const percentage = (
+                    totalSeconds(progress.audiobook_time) /
+                    totalSeconds(audiobook.total_length) * 100
+                ).toFixed(2);
+                return Math.round(percentage)
             }
         }
         return 0
@@ -135,6 +178,14 @@ function Progress({ token, apiUrl, userId }) {
                         <p>Time: {progress.audiobook_time} / {audiobook.total_length}</p>
                     )}
                     {progress.book_id && (
+                        <>
+                        <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${percent}%` }}></div>
+                        </div>
+                        <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
+                        </>
+                    )}
+                    {progress.audiobook_id && !progress.book_id && (
                         <>
                         <div className="progress-bar">
                         <div className="progress-fill" style={{ width: `${percent}%` }}></div>

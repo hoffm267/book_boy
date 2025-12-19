@@ -28,7 +28,7 @@ func NewBookRepo(db *sql.DB) BookRepo {
 }
 
 func (r *bookRepo) GetAll() ([]domain.Book, error) {
-	rows, err := r.db.Query("SELECT id, user_id, isbn, title, total_pages FROM books")
+	rows, err := r.db.Query("SELECT id, isbn, title, total_pages FROM books")
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (r *bookRepo) GetAll() ([]domain.Book, error) {
 	var books []domain.Book
 	for rows.Next() {
 		var book domain.Book
-		if err := rows.Scan(&book.ID, &book.UserID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
+		if err := rows.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
 			return nil, err
 		}
 		books = append(books, book)
@@ -46,10 +46,10 @@ func (r *bookRepo) GetAll() ([]domain.Book, error) {
 }
 
 func (r *bookRepo) GetByID(id int) (*domain.Book, error) {
-	row := r.db.QueryRow("SELECT id, user_id, isbn, title, total_pages FROM books WHERE id = $1", id)
+	row := r.db.QueryRow("SELECT id, isbn, title, total_pages FROM books WHERE id = $1", id)
 
 	var book domain.Book
-	err := row.Scan(&book.ID, &book.UserID, &book.ISBN, &book.Title, &book.TotalPages)
+	err := row.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -63,8 +63,8 @@ func (r *bookRepo) GetByID(id int) (*domain.Book, error) {
 func (r *bookRepo) Create(book *domain.Book) (int, error) {
 	var id int
 	err := r.db.QueryRow(
-		"INSERT INTO books (user_id, isbn, title, total_pages) VALUES ($1, $2, $3, $4) RETURNING id",
-		book.UserID, book.ISBN, book.Title, book.TotalPages,
+		"INSERT INTO books (isbn, title, total_pages) VALUES ($1, $2, $3) RETURNING id",
+		book.ISBN, book.Title, book.TotalPages,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -74,8 +74,8 @@ func (r *bookRepo) Create(book *domain.Book) (int, error) {
 
 func (r *bookRepo) Update(book *domain.Book) error {
 	_, err := r.db.Exec(
-		"UPDATE books SET isbn = $1, title = $2, total_pages = $3 WHERE id = $4 AND user_id = $5",
-		book.ISBN, book.Title, book.TotalPages, book.ID, book.UserID,
+		"UPDATE books SET isbn = $1, title = $2, total_pages = $3 WHERE id = $4",
+		book.ISBN, book.Title, book.TotalPages, book.ID,
 	)
 	return err
 }
@@ -86,10 +86,10 @@ func (r *bookRepo) Delete(id int) error {
 }
 
 func (r *bookRepo) GetByTitle(title string) (*domain.Book, error) {
-	row := r.db.QueryRow("SELECT id, user_id, isbn, title, total_pages FROM books WHERE title = $1", title)
+	row := r.db.QueryRow("SELECT id, isbn, title, total_pages FROM books WHERE title = $1", title)
 
 	var book domain.Book
-	err := row.Scan(&book.ID, &book.UserID, &book.ISBN, &book.Title, &book.TotalPages)
+	err := row.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -101,7 +101,7 @@ func (r *bookRepo) GetByTitle(title string) (*domain.Book, error) {
 }
 
 func (r *bookRepo) GetSimilarTitles(title string) ([]domain.Book, error) {
-	rows, err := r.db.Query("SELECT id, user_id, isbn, title, total_pages FROM books WHERE title % $1 ORDER BY similarity(title, $1) DESC", title)
+	rows, err := r.db.Query("SELECT id, isbn, title, total_pages FROM books WHERE title % $1 ORDER BY similarity(title, $1) DESC", title)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (r *bookRepo) GetSimilarTitles(title string) ([]domain.Book, error) {
 	var books []domain.Book
 	for rows.Next() {
 		var book domain.Book
-		if err := rows.Scan(&book.ID, &book.UserID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
+		if err := rows.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
 			return nil, err
 		}
 		books = append(books, book)
@@ -119,7 +119,7 @@ func (r *bookRepo) GetSimilarTitles(title string) ([]domain.Book, error) {
 }
 
 func (r *bookRepo) FilterBooks(filter BookFilter) ([]domain.Book, error) {
-	query := "SELECT id, user_id, isbn, title, total_pages FROM books"
+	query := "SELECT id, isbn, title, total_pages FROM books"
 	var conditions []string
 	var args []interface{}
 	argIndex := 1
@@ -127,11 +127,6 @@ func (r *bookRepo) FilterBooks(filter BookFilter) ([]domain.Book, error) {
 	if filter.ID != nil {
 		conditions = append(conditions, fmt.Sprintf("id = $%d", argIndex))
 		args = append(args, *filter.ID)
-		argIndex++
-	}
-	if filter.UserID != nil {
-		conditions = append(conditions, fmt.Sprintf("user_id = $%d", argIndex))
-		args = append(args, *filter.UserID)
 		argIndex++
 	}
 	if filter.ISBN != nil {
@@ -163,7 +158,7 @@ func (r *bookRepo) FilterBooks(filter BookFilter) ([]domain.Book, error) {
 	var books []domain.Book
 	for rows.Next() {
 		var book domain.Book
-		if err := rows.Scan(&book.ID, &book.UserID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
+		if err := rows.Scan(&book.ID, &book.ISBN, &book.Title, &book.TotalPages); err != nil {
 			return nil, err
 		}
 		books = append(books, book)

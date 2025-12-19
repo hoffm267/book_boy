@@ -6,12 +6,12 @@ import (
 	"os"
 
 	"book_boy/api/external/book_metadata"
-	"book_boy/api/internal/service"
 	"book_boy/api/internal/controllers"
 	"book_boy/api/internal/db"
-	"book_boy/api/internal/repository"
 	"book_boy/api/internal/infra"
 	"book_boy/api/internal/middleware"
+	"book_boy/api/internal/repository"
+	"book_boy/api/internal/service"
 	"book_boy/api/internal/workers"
 
 	"github.com/gin-gonic/gin"
@@ -62,16 +62,23 @@ func main() {
 	if rabbitmqURL == "" {
 		rabbitmqURL = "amqp://guest:guest@localhost:5672/"
 	}
-	queue, err := infra.NewQueue(rabbitmqURL)
+
+	rabbitConn, err := infra.ConnectRabbitMQ(rabbitmqURL)
 	if err != nil {
-		log.Printf("Warning: Failed to connect to RabbitMQ: %v", err)
-	} else {
-		defer queue.Close()
-		fmt.Println("Connected to RabbitMQ:", rabbitmqURL)
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+	defer rabbitConn.Close()
+	fmt.Println("Connected to RabbitMQ:", rabbitmqURL)
+
+	publisher, err := infra.NewEventPublisher(rabbitConn, "book_events")
+	if err != nil {
+		log.Fatalf("Failed to create event publisher: %v", err)
 	}
 
+	sseManager := infra.NewSSEManager()
+
 	bookRepo := repository.NewBookRepo(database)
-	bookService := service.NewBookService(bookRepo, cache, queue)
+	bookService := service.NewBookService(bookRepo, cache, publisher)
 
 	userRepo := repository.NewUserRepo(database)
 	userService := service.NewUserService(userRepo)
@@ -95,15 +102,11 @@ func main() {
 	bookMetadataClient := book_metadata.NewClient(bookMetadataServiceURL)
 	bookMetadataService := service.NewBookMetadataService(bookMetadataClient, cache)
 
-	if queue != nil {
-		metadataWorker := workers.NewMetadataWorker(queue, bookService, bookMetadataClient)
-		go func() {
-			if err := metadataWorker.Start(); err != nil {
-				log.Printf("Metadata worker error: %v", err)
-			}
-		}()
-		fmt.Println("Started metadata worker")
+	metadataConsumer := workers.NewMetadataEventConsumer(rabbitConn, bookService, sseManager)
+	if err := metadataConsumer.Start(); err != nil {
+		log.Fatalf("Failed to start metadata event consumer: %v", err)
 	}
+	fmt.Println("Started metadata event consumer")
 
 	bookController := controllers.NewBookController(bookService, progressService, bookMetadataService)
 	audiobookController := controllers.NewAudiobookController(audiobookService, progressService)
@@ -140,6 +143,22 @@ func main() {
 		progressController.RegisterRoutes(protected)
 		trackingController.RegisterRoutes(protected)
 	}
+
+	r.GET("/events", func(c *gin.Context) {
+		token := c.Query("token")
+		if token == "" {
+			c.JSON(401, gin.H{"error": "token required"})
+			return
+		}
+
+		_, err := authService.GetUserFromToken(token)
+		if err != nil {
+			c.JSON(401, gin.H{"error": "invalid token"})
+			return
+		}
+
+		sseManager.ServeHTTP(c)
+	})
 
 	r.Run(":8080")
 }

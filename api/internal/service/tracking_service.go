@@ -40,7 +40,6 @@ func (s *trackingService) StartTracking(userID int, req *domain.StartTrackingReq
 			Title:      req.Title,
 			TotalPages: req.TotalPages,
 			ISBN:       req.ISBN,
-			UserID:     userID,
 		}
 		if err := book.Validate(); err != nil {
 			return nil, err

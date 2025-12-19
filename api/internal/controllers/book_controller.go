@@ -38,15 +38,7 @@ func (bc *BookController) RegisterRoutes(r gin.IRouter) {
 }
 
 func (bc *BookController) GetAll(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-
-	uid := userID.(int)
-	filter := repository.BookFilter{UserID: &uid}
-	books, err := bc.Service.FilterBooks(filter)
+	books, err := bc.Service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -83,18 +75,6 @@ func (bc *BookController) Create(c *gin.Context) {
 		return
 	}
 
-	if book.ISBN != "" {
-		metadata, err := bc.BookMetadataService.GetBookByISBN(book.ISBN)
-		if err == nil {
-			if book.Title == "" && metadata.Title != nil {
-				book.Title = *metadata.Title
-			}
-			if book.TotalPages == 0 && metadata.TotalPages != nil {
-				book.TotalPages = *metadata.TotalPages
-			}
-		}
-	}
-
 	if book.ISBN == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "isbn is required"})
 		return
@@ -106,11 +86,31 @@ func (bc *BookController) Create(c *gin.Context) {
 		return
 	}
 
-	book.UserID = userID.(int)
+	filter := repository.BookFilter{ISBN: &book.ISBN}
+	existingBooks, err := bc.Service.FilterBooks(filter)
 
-	id, err := bc.Service.Create(&book)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	var id int
+	if err == nil && len(existingBooks) > 0 {
+		id = existingBooks[0].ID
+	} else {
+		id, err = bc.Service.Create(&book)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	uid := userID.(int)
+
+	skipProgress := c.Query("skipProgress") == "true"
+	if skipProgress {
+		savedBook, err := bc.Service.GetByID(id)
+		if err != nil || savedBook == nil {
+			book.ID = id
+			c.JSON(http.StatusCreated, gin.H{"data": book})
+			return
+		}
+		c.JSON(http.StatusCreated, gin.H{"data": savedBook})
 		return
 	}
 
@@ -127,9 +127,24 @@ func (bc *BookController) Create(c *gin.Context) {
 			return
 		}
 	} else {
+		progFilter := repository.ProgressFilter{
+			UserID: &uid,
+			BookID: &id,
+		}
+		existingProgress, err := bc.ProgressService.FilterProgress(progFilter)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if len(existingProgress) > 0 {
+			c.JSON(http.StatusConflict, gin.H{"error": "progress already exists for this book"})
+			return
+		}
+
 		page := 1
 		progress = domain.Progress{
-			UserID:   userID.(int),
+			UserID:   uid,
 			BookID:   &id,
 			BookPage: &page,
 		}
@@ -141,8 +156,13 @@ func (bc *BookController) Create(c *gin.Context) {
 		}
 	}
 
-	book.ID = id
-	c.JSON(http.StatusCreated, gin.H{"data": book})
+	savedBook, err := bc.Service.GetByID(id)
+	if err != nil || savedBook == nil {
+		book.ID = id
+		c.JSON(http.StatusCreated, gin.H{"data": book})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"data": savedBook})
 }
 
 func (bc *BookController) Update(c *gin.Context) {
@@ -152,19 +172,12 @@ func (bc *BookController) Update(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-
 	var book domain.Book
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	book.ID = id
-	book.UserID = userID.(int)
 
 	if err := bc.Service.Update(&book); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -211,15 +224,7 @@ func (bc *BookController) GetSimilarTitles(c *gin.Context) {
 }
 
 func (bc *BookController) FilterBooks(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-
-	uid := userID.(int)
 	var filter repository.BookFilter
-	filter.UserID = &uid
 
 	if idStr := c.Query("id"); idStr != "" {
 		if id, err := strconv.Atoi(idStr); err == nil {

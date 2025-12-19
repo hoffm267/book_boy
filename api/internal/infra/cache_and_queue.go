@@ -46,12 +46,7 @@ type Queue struct {
 	channel *amqp.Channel
 }
 
-func NewQueue(url string) (*Queue, error) {
-	conn, err := amqp.Dial(url)
-	if err != nil {
-		return nil, err
-	}
-
+func NewQueue(conn *amqp.Connection) (*Queue, error) {
 	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
@@ -103,7 +98,18 @@ func (q *Queue) Close() {
 	if q.channel != nil {
 		q.channel.Close()
 	}
-	if q.conn != nil {
-		q.conn.Close()
+}
+
+func ConnectRabbitMQ(url string) (*amqp.Connection, error) {
+	config := amqp.Config{
+		Heartbeat: 10 * time.Second,
+		Locale:    "en_US",
 	}
+
+	conn, err := amqp.DialConfig(url, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
 }
