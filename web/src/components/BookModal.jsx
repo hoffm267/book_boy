@@ -112,112 +112,112 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams }) 
 
     return (
         <div className="modal" onClick={onClose}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-        <h2>
-        {item
-            ? `Edit ${type === 'book' ? 'Book' : 'Audiobook'}`
-            : `Add ${type === 'book' ? (useISBN ? 'Book by ISBN' : 'Book Manually') : 'Audiobook'}`
-        }
-        </h2>
-        <button onClick={onClose} className="close-btn">&times;</button>
-        </div>
-
-        {error && <div className="error">{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-        {type === 'book' && !item && (
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-            <input
-            type="checkbox"
-            checked={useISBN}
-            onChange={(e) => setUseISBN(e.target.checked)}
-            style={{ width: 'auto', cursor: 'pointer' }}
-            />
-            <span>Auto-fill by ISBN (fetches metadata automatically)</span>
-            </label>
-            </div>
-        )}
-
-        {type === 'book' && (
-            <div className="form-group">
-            <label>ISBN *</label>
-            <input
-            type="text"
-            name="isbn"
-            value={formData.isbn}
-            onChange={handleISBNChange}
-            required
-            />
-            {checkingISBN && <p style={{ fontSize: '0.9em', color: '#7f8c8d', marginTop: '5px' }}>Checking ISBN...</p>}
-            {existingBook && !item && (
-                <div style={{
-                    marginTop: '10px',
-                        padding: '10px',
-                        background: '#ecf0f1',
-                        borderRadius: '5px',
-                        fontSize: '0.9em'
-                }}>
-                <strong>Book already exists:</strong> {existingBook.title || 'Untitled'} ({existingBook.total_pages || 0} pages)
-                <br />
-                <span style={{ color: '#7f8c8d' }}>Creating a new progress entry for this book</span>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>
+                        {item
+                            ? `Edit ${type === 'book' ? 'Book' : 'Audiobook'}`
+                            : `Add ${type === 'book' ? (useISBN ? 'Book by ISBN' : 'Book Manually') : 'Audiobook'}`
+                        }
+                    </h2>
+                    <button onClick={onClose} className="close-btn">&times;</button>
                 </div>
-            )}
-            </div>
-        )}
 
-        {(!useISBN || type !== 'book') && (
-            <div className="form-group">
-            <label>Title *</label>
-            <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            />
-            </div>
-        )}
+                {error && <div className="error">{error}</div>}
 
-        {type === 'book' ? (
-            !useISBN && (
-                <div className="form-group">
-                <label>Total Pages *</label>
-                <input
-                type="number"
-                name="total_pages"
-                value={formData.total_pages}
-                onChange={handleChange}
-                min="1"
-                required
-                />
-                </div>
-            )
-        ) : (
-            <div className="form-group">
-            <label>Duration (e.g., "5 hours 30 minutes")</label>
-            <input
-            type="text"
-            name="total_length"
-            value={formData.total_length}
-            onChange={handleChange}
-            required
-            placeholder="5 hours 30 minutes"
-            />
-            </div>
-        )}
+                <form onSubmit={handleSubmit}>
+                    {type === 'book' && !item && (
+                        <div className="form-group" style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={useISBN}
+                                    onChange={(e) => setUseISBN(e.target.checked)}
+                                    style={{ width: 'auto', cursor: 'pointer' }}
+                                />
+                                <span>Auto-fill by ISBN (fetches metadata automatically)</span>
+                            </label>
+                        </div>
+                    )}
 
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-        <button type="button" onClick={onClose} className="btn btn-secondary">
-        Cancel
-        </button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-        {loading ? 'Saving...' : 'Save'}
-        </button>
-        </div>
-        </form>
-        </div>
+                    {type === 'book' && (
+                        <div className="form-group">
+                            <label>ISBN *</label>
+                            <input
+                                type="text"
+                                name="isbn"
+                                value={formData.isbn}
+                                onChange={handleISBNChange}
+                                required
+                            />
+                            {checkingISBN && <p style={{ fontSize: '0.9em', color: '#7f8c8d', marginTop: '5px' }}>Checking ISBN...</p>}
+                            {existingBook && !item && (
+                                <div style={{
+                                    marginTop: '10px',
+                                    padding: '10px',
+                                    background: '#ecf0f1',
+                                    borderRadius: '5px',
+                                    fontSize: '0.9em'
+                                }}>
+                                    <strong>Book already exists:</strong> {existingBook.title || 'Untitled'} ({existingBook.total_pages || 0} pages)
+                                    <br />
+                                    <span style={{ color: '#7f8c8d' }}>Creating a new progress entry for this book</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {(!useISBN || type !== 'book') && (
+                        <div className="form-group">
+                            <label>Title *</label>
+                            <input
+                                type="text"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    )}
+
+                    {type === 'book' ? (
+                        !useISBN && (
+                            <div className="form-group">
+                                <label>Total Pages *</label>
+                                <input
+                                    type="number"
+                                    name="total_pages"
+                                    value={formData.total_pages}
+                                    onChange={handleChange}
+                                    min="1"
+                                    required
+                                />
+                            </div>
+                        )
+                    ) : (
+                        <div className="form-group">
+                            <label>Duration (e.g., "5 hours 30 minutes")</label>
+                            <input
+                                type="text"
+                                name="total_length"
+                                value={formData.total_length}
+                                onChange={handleChange}
+                                required
+                                placeholder="5 hours 30 minutes"
+                            />
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                        <button type="button" onClick={onClose} className="btn btn-secondary">
+                            Cancel
+                        </button>
+                        <button type="submit" className="btn btn-primary" disabled={loading}>
+                            {loading ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

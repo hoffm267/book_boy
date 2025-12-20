@@ -151,102 +151,102 @@ function Progress({ token, apiUrl, userId }) {
 
     return (
         <>
-        <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Reading Progress</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-        <button onClick={() => setShowBookModal(true)} className="btn">+ Book</button>
-        <button onClick={() => setShowAudiobookModal(true)} className="btn">+ Audiobook</button>
-        <button onClick={() => { setEditingProgress(null); setShowModal(true); }} className="btn btn-primary">
-        + Track Progress
-        </button>
-        </div>
-        </div>
-
-        {progressList.length === 0 ? (
-            <p style={{ color: '#7f8c8d', textAlign: 'center', padding: '40px' }}>
-            No progress tracked yet. Click "Start Tracking" to begin!
-            </p>
-        ) : (
-            <div className="grid">
-            {progressList.map(progress => {
-                const percent = calculateProgress(progress)
-                const book = progress.book_id ? getBook(progress.book_id) : null
-                const audiobook = progress.audiobook_id ? getAudiobook(progress.audiobook_id) : null
-                const title = book?.title || audiobook?.title || 'Unknown'
-
-                return (
-                    <div key={progress.id} className="book-card">
-                    <h3>{title}</h3>
-                    {progress.book_id && book && (
-                        <p>Page: {progress.book_page} / {book.total_pages}</p>
-                    )}
-                    {progress.audiobook_id && audiobook && (
-                        <p>Time: {progress.audiobook_time} / {audiobook.total_length}</p>
-                    )}
-                    {progress.book_id && (
-                        <>
-                        <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${percent}%` }}></div>
-                        </div>
-                        <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
-                        </>
-                    )}
-                    {progress.audiobook_id && !progress.book_id && (
-                        <>
-                        <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${percent}%` }}></div>
-                        </div>
-                        <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
-                        </>
-                    )}
-                    <div className="book-actions">
-                    <button onClick={() => handleEditClick(progress)} className="btn btn-primary">
-                    Update
-                    </button>
-                    <button onClick={() => handleDelete(progress.id)} className="btn btn-danger">
-                    Delete
-                    </button>
+            <div className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h2>Reading Progress</h2>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={() => setShowBookModal(true)} className="btn">+ Book</button>
+                        <button onClick={() => setShowAudiobookModal(true)} className="btn">+ Audiobook</button>
+                        <button onClick={() => { setEditingProgress(null); setShowModal(true); }} className="btn btn-primary">
+                            + Track Progress
+                        </button>
                     </div>
+                </div>
+
+                {progressList.length === 0 ? (
+                    <p style={{ color: '#7f8c8d', textAlign: 'center', padding: '40px' }}>
+                        No progress tracked yet. Click "Start Tracking" to begin!
+                    </p>
+                ) : (
+                    <div className="grid">
+                        {progressList.map(progress => {
+                            const percent = calculateProgress(progress)
+                            const book = progress.book_id ? getBook(progress.book_id) : null
+                            const audiobook = progress.audiobook_id ? getAudiobook(progress.audiobook_id) : null
+                            const title = book?.title || audiobook?.title || 'Unknown'
+
+                            return (
+                                <div key={progress.id} className="book-card">
+                                    <h3>{title}</h3>
+                                    {progress.book_id && book && (
+                                        <p>Page: {progress.book_page} / {book.total_pages}</p>
+                                    )}
+                                    {progress.audiobook_id && audiobook && (
+                                        <p>Time: {progress.audiobook_time} / {audiobook.total_length}</p>
+                                    )}
+                                    {progress.book_id && (
+                                        <>
+                                            <div className="progress-bar">
+                                                <div className="progress-fill" style={{ width: `${percent}%` }}></div>
+                                            </div>
+                                            <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
+                                        </>
+                                    )}
+                                    {progress.audiobook_id && !progress.book_id && (
+                                        <>
+                                            <div className="progress-bar">
+                                                <div className="progress-fill" style={{ width: `${percent}%` }}></div>
+                                            </div>
+                                            <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
+                                        </>
+                                    )}
+                                    <div className="book-actions">
+                                        <button onClick={() => handleEditClick(progress)} className="btn btn-primary">
+                                            Update
+                                        </button>
+                                        <button onClick={() => handleDelete(progress.id)} className="btn btn-danger">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
-                )
-            })}
+                )}
             </div>
-        )}
-        </div>
 
-        {showModal && (
-            <ProgressModal
-            progress={editingProgress}
-            books={books}
-            audiobooks={audiobooks}
-            userId={userId}
-            token={token}
-            apiUrl={apiUrl}
-            onClose={() => setShowModal(false)}
-            onSave={handleModalSave}
-            />
-        )}
+            {showModal && (
+                <ProgressModal
+                    progress={editingProgress}
+                    books={books}
+                    audiobooks={audiobooks}
+                    userId={userId}
+                    token={token}
+                    apiUrl={apiUrl}
+                    onClose={() => setShowModal(false)}
+                    onSave={handleModalSave}
+                />
+            )}
 
-        {showBookModal && (
-            <BookModal
-            type="book"
-            token={token}
-            apiUrl={apiUrl}
-            onClose={() => setShowBookModal(false)}
-            onSave={() => { setShowBookModal(false); fetchBooks(); }}
-            />
-        )}
+            {showBookModal && (
+                <BookModal
+                    type="book"
+                    token={token}
+                    apiUrl={apiUrl}
+                    onClose={() => setShowBookModal(false)}
+                    onSave={() => { setShowBookModal(false); fetchBooks(); }}
+                />
+            )}
 
-        {showAudiobookModal && (
-            <BookModal
-            type="audiobook"
-            token={token}
-            apiUrl={apiUrl}
-            onClose={() => setShowAudiobookModal(false)}
-            onSave={() => { setShowAudiobookModal(false); fetchAudiobooks(); }}
-            />
-        )}
+            {showAudiobookModal && (
+                <BookModal
+                    type="audiobook"
+                    token={token}
+                    apiUrl={apiUrl}
+                    onClose={() => setShowAudiobookModal(false)}
+                    onSave={() => { setShowAudiobookModal(false); fetchAudiobooks(); }}
+                />
+            )}
         </>
     )
 }
