@@ -115,12 +115,6 @@ func (ac *AudiobookController) Update(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-
 	var audiobook domain.Audiobook
 	if err := c.ShouldBindJSON(&audiobook); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
