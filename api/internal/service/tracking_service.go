@@ -74,7 +74,6 @@ func (s *trackingService) StartTracking(userID int, req *domain.StartTrackingReq
 		audiobook := &domain.Audiobook{
 			Title:       req.Title,
 			TotalLength: duration,
-			UserID:      userID,
 		}
 		if err := audiobook.Validate(); err != nil {
 			return nil, err

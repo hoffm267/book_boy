@@ -31,27 +31,13 @@ func (ac *AudiobookController) RegisterRoutes(r gin.IRouter) {
 }
 
 func (ac *AudiobookController) GetAll(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-
 	result, err := ac.Service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	uid := userID.(int)
-	filtered := []domain.Audiobook{}
-	for _, a := range result {
-		if a.UserID == uid {
-			filtered = append(filtered, a)
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": filtered})
+	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
 func (ac *AudiobookController) GetByID(c *gin.Context) {
@@ -86,8 +72,6 @@ func (ac *AudiobookController) Create(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-
-	audiobook.UserID = userID.(int)
 
 	id, err := ac.Service.Create(&audiobook)
 	if err != nil {
@@ -143,7 +127,6 @@ func (ac *AudiobookController) Update(c *gin.Context) {
 		return
 	}
 	audiobook.ID = id
-	audiobook.UserID = userID.(int)
 
 	if err := ac.Service.Update(&audiobook); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
