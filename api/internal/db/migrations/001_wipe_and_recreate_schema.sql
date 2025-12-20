@@ -29,7 +29,6 @@ CREATE TABLE books (
 
 CREATE TABLE audiobooks (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title TEXT,
     total_length INTERVAL
 );
@@ -83,6 +82,5 @@ EXECUTE FUNCTION delete_orphaned_progress();
 CREATE INDEX idx_user_progress_user ON progress(user_id);
 CREATE INDEX idx_user_progress_book ON progress(book_id);
 CREATE INDEX idx_user_progress_audio ON progress(audiobook_id);
-CREATE INDEX idx_audiobooks_user ON audiobooks(user_id);
 CREATE INDEX idx_books_title_trgm ON books USING gin (title gin_trgm_ops);
 CREATE INDEX idx_audiobooks_title_trgm ON audiobooks USING gin (title gin_trgm_ops);
