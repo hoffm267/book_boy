@@ -1,4 +1,4 @@
-# Book Boy: https://book-boy-web.vercel.app
+# Book Boy: [bookboy.app](bookboy.app)
 
 > A simple tracker that synchronizes progress between physical books and audiobooks
 
