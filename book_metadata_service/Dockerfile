@@ -2,8 +2,8 @@ FROM python:3.12-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache --no-scripts gcc musl-dev libffi-dev && \
-    apk fix --no-scripts
+RUN apk update && \
+    apk add --no-cache gcc musl-dev libffi-dev
 
 COPY requirements.txt .
 

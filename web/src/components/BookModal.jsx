@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 
-function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams }) {
-    const [useISBN, setUseISBN] = useState(true)
+function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, userId, linkingToProgressId, prefillTitle }) {
+    const [useISBN, setUseISBN] = useState(!prefillTitle && !linkingToProgressId)
     const [formData, setFormData] = useState(
         item || (type === 'book'
-            ? { isbn: '', title: '', total_pages: '' }
-            : { title: '', total_length: '' })
+            ? { isbn: '', title: prefillTitle || '', total_pages: '' }
+            : { title: prefillTitle || '', total_length: '' })
     )
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
@@ -31,7 +31,9 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams }) 
             const method = item ? 'PUT' : 'POST'
             let url = item ? `${apiUrl}/${endpoint}/${item.id}` : `${apiUrl}/${endpoint}`
 
-            if (queryParams && !item && type === 'book' && useISBN) {
+            if (linkingToProgressId) {
+                url += `?pgId=${linkingToProgressId}`
+            } else if (queryParams && !item && type === 'book' && useISBN) {
                 url += `?${queryParams}`
             }
 
@@ -126,7 +128,7 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams }) 
                 {error && <div className="error">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
-                    {type === 'book' && !item && (
+                    {type === 'book' && !item && !linkingToProgressId && (
                         <div className="form-group" style={{ marginBottom: '20px' }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                                 <input
@@ -147,27 +149,13 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams }) 
                                 type="text"
                                 name="isbn"
                                 value={formData.isbn}
-                                onChange={handleISBNChange}
+                                onChange={linkingToProgressId ? handleChange : handleISBNChange}
                                 required
                             />
-                            {checkingISBN && <p style={{ fontSize: '0.9em', color: '#7f8c8d', marginTop: '5px' }}>Checking ISBN...</p>}
-                            {existingBook && !item && (
-                                <div style={{
-                                    marginTop: '10px',
-                                    padding: '10px',
-                                    background: '#ecf0f1',
-                                    borderRadius: '5px',
-                                    fontSize: '0.9em'
-                                }}>
-                                    <strong>Book already exists:</strong> {existingBook.title || 'Untitled'} ({existingBook.total_pages || 0} pages)
-                                    <br />
-                                    <span style={{ color: '#7f8c8d' }}>Creating a new progress entry for this book</span>
-                                </div>
-                            )}
                         </div>
                     )}
 
-                    {(!useISBN || type !== 'book') && (
+                    {((!useISBN && type === 'book') || type === 'audiobook' || linkingToProgressId) && (
                         <div className="form-group">
                             <label>Title *</label>
                             <input
@@ -181,7 +169,7 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams }) 
                     )}
 
                     {type === 'book' ? (
-                        !useISBN && (
+                        (!useISBN || linkingToProgressId) && (
                             <div className="form-group">
                                 <label>Total Pages *</label>
                                 <input
@@ -196,14 +184,14 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams }) 
                         )
                     ) : (
                         <div className="form-group">
-                            <label>Duration (e.g., "5 hours 30 minutes")</label>
+                            <label>Duration (e.g., "5:30")</label>
                             <input
                                 type="text"
                                 name="total_length"
                                 value={formData.total_length}
                                 onChange={handleChange}
                                 required
-                                placeholder="5 hours 30 minutes"
+                                placeholder="00:00:00"
                             />
                         </div>
                     )}

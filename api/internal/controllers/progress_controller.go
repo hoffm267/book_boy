@@ -12,7 +12,9 @@ import (
 )
 
 type ProgressController struct {
-	Service service.ProgressService
+	Service          service.ProgressService
+	BookService      service.BookService
+	AudiobookService service.AudiobookService
 }
 
 type updatePageReq struct {
@@ -23,8 +25,12 @@ type updateTimeReq struct {
 	AudiobookTime domain.CustomDuration `json:"audiobook_time" binding:"required"`
 }
 
-func NewProgressController(Service service.ProgressService) *ProgressController {
-	return &ProgressController{Service: Service}
+func NewProgressController(Service service.ProgressService, BookService service.BookService, AudiobookService service.AudiobookService) *ProgressController {
+	return &ProgressController{
+		Service:          Service,
+		BookService:      BookService,
+		AudiobookService: AudiobookService,
+	}
 }
 
 func (pc *ProgressController) RegisterRoutes(r gin.IRouter) {
@@ -37,6 +43,7 @@ func (pc *ProgressController) RegisterRoutes(r gin.IRouter) {
 	progress.PATCH("/:id/page", pc.UpdateByPage)
 	progress.PATCH("/:id/time", pc.UpdateByTime)
 	progress.GET("/filter", pc.FilterProgress)
+	progress.GET("/enriched", pc.GetEnrichedByUser)
 }
 
 func (pc *ProgressController) GetAll(c *gin.Context) {
@@ -80,6 +87,37 @@ func (pc *ProgressController) Create(c *gin.Context) {
 	}
 
 	progress.UserID = userID.(int)
+
+	uid := userID.(int)
+	var filter repository.ProgressFilter
+	filter.UserID = &uid
+
+	if progress.BookID != nil {
+		filter.BookID = progress.BookID
+		existingProgress, err := pc.Service.FilterProgress(filter)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if len(existingProgress) > 0 {
+			c.JSON(http.StatusConflict, gin.H{"error": "progress already exists for this book"})
+			return
+		}
+	}
+
+	if progress.AudiobookID != nil {
+		filter.AudiobookID = progress.AudiobookID
+		filter.BookID = nil
+		existingProgress, err := pc.Service.FilterProgress(filter)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if len(existingProgress) > 0 {
+			c.JSON(http.StatusConflict, gin.H{"error": "progress already exists for this audiobook"})
+			return
+		}
+	}
 
 	id, err := pc.Service.Create(&progress)
 	if err != nil {
@@ -196,10 +234,48 @@ func (pc *ProgressController) Delete(c *gin.Context) {
 		return
 	}
 
+	bookID := existing.BookID
+	audiobookID := existing.AudiobookID
+
 	if err := pc.Service.Delete(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if bookID != nil {
+		var filter repository.ProgressFilter
+		filter.BookID = bookID
+		remainingProgress, err := pc.Service.FilterProgress(filter)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if len(remainingProgress) == 0 {
+			if err := pc.BookService.Delete(*bookID); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		}
+	}
+
+	if audiobookID != nil {
+		var filter repository.ProgressFilter
+		filter.AudiobookID = audiobookID
+		remainingProgress, err := pc.Service.FilterProgress(filter)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if len(remainingProgress) == 0 {
+			if err := pc.AudiobookService.Delete(*audiobookID); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		}
+	}
+
 	c.Status(http.StatusNoContent)
 }
 
@@ -277,4 +353,20 @@ func (pc *ProgressController) FilterProgress(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, progresses)
+}
+
+func (pc *ProgressController) GetEnrichedByUser(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	enriched, err := pc.Service.GetAllEnrichedByUser(userID.(int))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch enriched progress"})
+		return
+	}
+
+	c.JSON(http.StatusOK, enriched)
 }

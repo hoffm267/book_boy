@@ -110,7 +110,7 @@ func main() {
 
 	bookController := controllers.NewBookController(bookService, progressService, bookMetadataService)
 	audiobookController := controllers.NewAudiobookController(audiobookService, progressService)
-	progressController := controllers.NewProgressController(progressService)
+	progressController := controllers.NewProgressController(progressService, bookService, audiobookService)
 	trackingController := controllers.NewTrackingController(trackingService)
 	bookMetadataController := controllers.NewBookMetadataController(bookMetadataService)
 

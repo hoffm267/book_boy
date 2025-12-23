@@ -1,20 +1,18 @@
 import { useState, useEffect } from 'react'
-import ProgressModal from './ProgressModal'
 import BookModal from './BookModal'
+import ProgressEditModal from './ProgressEditModal'
 
 function Progress({ token, apiUrl, userId }) {
     const [progressList, setProgressList] = useState([])
-    const [books, setBooks] = useState([])
-    const [audiobooks, setAudiobooks] = useState([])
-    const [showModal, setShowModal] = useState(false)
     const [editingProgress, setEditingProgress] = useState(null)
+    const [originalValues, setOriginalValues] = useState({})
     const [showBookModal, setShowBookModal] = useState(false)
     const [showAudiobookModal, setShowAudiobookModal] = useState(false)
+    const [linkingProgressId, setLinkingProgressId] = useState(null)
 
     useEffect(() => {
-        fetchProgress()
-        fetchBooks()
-        fetchAudiobooks()
+        fetchEnrichedProgress()
+
         console.log('Setting up SSE connection...')
         const eventSource = new EventSource(`${apiUrl}/events?token=${token}`)
 
@@ -26,11 +24,14 @@ function Progress({ token, apiUrl, userId }) {
             console.log('Received book.metadata_fetched event:', e.data)
             const updatedBook = JSON.parse(e.data)
             console.log('Updating book:', updatedBook)
-            setBooks(prev => {
-                const updated = prev.map(book =>
-                    book.id === updatedBook.id ? updatedBook : book
-                )
-                console.log('Updated books list:', updated)
+            setProgressList(prev => {
+                const updated = prev.map(prog => {
+                    if (prog.Book && prog.Book.id === updatedBook.id) {
+                        return { ...prog, Book: updatedBook }
+                    }
+                    return prog
+                })
+                console.log('Updated progress list:', updated)
                 return updated
             })
         })
@@ -46,45 +47,17 @@ function Progress({ token, apiUrl, userId }) {
         }
     }, [])
 
-    const fetchProgress = async () => {
+    const fetchEnrichedProgress = async () => {
         try {
-            const response = await fetch(`${apiUrl}/progress/filter?user_id=${userId}`, {
+            const response = await fetch(`${apiUrl}/progress/enriched`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-            const result = await response.json()
-            const data = result.data || result
-            setProgressList(Array.isArray(data) ? data : [])
+            const data = await response.json()
+            const sortedData = Array.isArray(data) ? data.sort((a, b) => a.Progress.id - b.Progress.id) : []
+            setProgressList(sortedData)
         } catch (err) {
-            console.error('Failed to fetch progress:', err)
+            console.error('Failed to fetch enriched progress:', err)
             setProgressList([])
-        }
-    }
-
-    const fetchBooks = async () => {
-        try {
-            const response = await fetch(`${apiUrl}/books`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            const result = await response.json()
-            const data = result.data || result
-            setBooks(Array.isArray(data) ? data : [])
-        } catch (err) {
-            console.error('Failed to fetch books:', err)
-            setBooks([])
-        }
-    }
-
-    const fetchAudiobooks = async () => {
-        try {
-            const response = await fetch(`${apiUrl}/audiobooks`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            const result = await response.json()
-            const data = result.data || result
-            setAudiobooks(Array.isArray(data) ? data : [])
-        } catch (err) {
-            console.error('Failed to fetch audiobooks:', err)
-            setAudiobooks([])
         }
     }
 
@@ -96,55 +69,70 @@ function Progress({ token, apiUrl, userId }) {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-            fetchProgress()
+            fetchEnrichedProgress()
         } catch (err) {
             alert('Failed to delete')
         }
     }
 
-    const handleEditClick = (progress) => {
-        setEditingProgress(progress)
-        setShowModal(true)
+    const handleEditClick = (enrichedProgress) => {
+        setEditingProgress(enrichedProgress.Progress)
+        setOriginalValues({
+            book_page: enrichedProgress.Progress.book_page || '',
+            audiobook_time: enrichedProgress.Progress.audiobook_time || ''
+        })
     }
 
-    const handleModalSave = () => {
-        setShowModal(false)
-        fetchProgress()
-        fetchBooks()
-        fetchAudiobooks()
-    }
-
-    const getBook = (bookId) => {
-        if (!Array.isArray(books)) return null
-        return books.find(b => b.id === bookId)
-    }
-
-    const getAudiobook = (audiobookId) => {
-        if (!Array.isArray(audiobooks)) return null
-        return audiobooks.find(ab => ab.id === audiobookId)
-    }
-
-    const calculateProgress = (progress) => {
-        if (progress.book_id && progress.book_page && Array.isArray(books)) {
-            const book = books.find(b => b.id === progress.book_id)
-            if (book && book.total_pages) {
-                return Math.round((progress.book_page / book.total_pages) * 100)
+    const handleSaveEdit = async (formData) => {
+        try {
+            if (formData.book_page && formData.book_page !== originalValues.book_page) {
+                await fetch(`${apiUrl}/progress/${editingProgress.id}/page`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ page: parseInt(formData.book_page) })
+                })
             }
+
+            if (formData.audiobook_time && formData.audiobook_time !== originalValues.audiobook_time) {
+                await fetch(`${apiUrl}/progress/${editingProgress.id}/time`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ audiobook_time: formData.audiobook_time })
+                })
+            }
+
+            setEditingProgress(null)
+            fetchEnrichedProgress()
+        } catch (err) {
+            alert('Failed to update progress')
         }
-        else if (progress.audiobook_id && progress.audiobook_time && Array.isArray(audiobooks)) {
-            const audiobook = audiobooks.find(ab => ab.id === progress.audiobook_id)
-            if (audiobook && audiobook.total_length) {
-                const totalSeconds = timeString =>
-                    timeString.split(':').reduce(
-                        (sum, part, i) => sum + part * [3600, 60, 1][i],
-                        0
-                    );
-                const percentage = (
-                    totalSeconds(progress.audiobook_time) /
-                    totalSeconds(audiobook.total_length) * 100
-                ).toFixed(2);
-                return Math.round(percentage)
-            }
+    }
+
+    const calculateProgress = (enrichedProgress) => {
+        const progress = enrichedProgress.Progress
+        const book = enrichedProgress.Book
+        const audiobook = enrichedProgress.Audiobook
+
+        if (progress.book_id && progress.book_page && book && book.total_pages) {
+            return Math.round((progress.book_page / book.total_pages) * 100)
+        }
+        else if (progress.audiobook_id && progress.audiobook_time && audiobook && audiobook.total_length) {
+            const totalSeconds = timeString =>
+                timeString.split(':').reduce(
+                    (sum, part, i) => sum + part * [3600, 60, 1][i],
+                    0
+                );
+            const percentage = (
+                totalSeconds(progress.audiobook_time) /
+                totalSeconds(audiobook.total_length) * 100
+            ).toFixed(2);
+            return Math.round(percentage)
         }
         return 0
     }
@@ -155,11 +143,8 @@ function Progress({ token, apiUrl, userId }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h2>Reading Progress</h2>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={() => setShowBookModal(true)} className="btn">+ Book</button>
-                        <button onClick={() => setShowAudiobookModal(true)} className="btn">+ Audiobook</button>
-                        <button onClick={() => { setEditingProgress(null); setShowModal(true); }} className="btn btn-primary">
-                            + Track Progress
-                        </button>
+                        <button onClick={() => setShowBookModal(true)} className="btn btn-primary">+ Book</button>
+                        <button onClick={() => setShowAudiobookModal(true)} className="btn btn-primary">+ Audiobook</button>
                     </div>
                 </div>
 
@@ -169,10 +154,9 @@ function Progress({ token, apiUrl, userId }) {
                     </p>
                 ) : (
                     <div className="grid">
-                        {progressList.map(progress => {
-                            const percent = calculateProgress(progress)
-                            const book = progress.book_id ? getBook(progress.book_id) : null
-                            const audiobook = progress.audiobook_id ? getAudiobook(progress.audiobook_id) : null
+                        {progressList.map(enrichedProgress => {
+                            const percent = calculateProgress(enrichedProgress)
+                            const { Progress: progress, Book: book, Audiobook: audiobook } = enrichedProgress
                             const title = book?.title || audiobook?.title || 'Unknown'
 
                             return (
@@ -184,24 +168,12 @@ function Progress({ token, apiUrl, userId }) {
                                     {progress.audiobook_id && audiobook && (
                                         <p>Time: {progress.audiobook_time} / {audiobook.total_length}</p>
                                     )}
-                                    {progress.book_id && (
-                                        <>
-                                            <div className="progress-bar">
-                                                <div className="progress-fill" style={{ width: `${percent}%` }}></div>
-                                            </div>
-                                            <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
-                                        </>
-                                    )}
-                                    {progress.audiobook_id && !progress.book_id && (
-                                        <>
-                                            <div className="progress-bar">
-                                                <div className="progress-fill" style={{ width: `${percent}%` }}></div>
-                                            </div>
-                                            <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
-                                        </>
-                                    )}
+                                    <div className="progress-bar">
+                                        <div className="progress-fill" style={{ width: `${percent}%` }}></div>
+                                    </div>
+                                    <p style={{ textAlign: 'center', fontSize: '12px' }}>{percent}% complete</p>
                                     <div className="book-actions">
-                                        <button onClick={() => handleEditClick(progress)} className="btn btn-primary">
+                                        <button onClick={() => handleEditClick(enrichedProgress)} className="btn btn-primary">
                                             Update
                                         </button>
                                         <button onClick={() => handleDelete(progress.id)} className="btn btn-danger">
@@ -215,38 +187,75 @@ function Progress({ token, apiUrl, userId }) {
                 )}
             </div>
 
-            {showModal && (
-                <ProgressModal
-                    progress={editingProgress}
-                    books={books}
-                    audiobooks={audiobooks}
-                    userId={userId}
-                    token={token}
-                    apiUrl={apiUrl}
-                    onClose={() => setShowModal(false)}
-                    onSave={handleModalSave}
-                />
-            )}
+            {editingProgress && (() => {
+                const enriched = progressList.find(p => p.Progress.id === editingProgress.id)
+                const book = enriched?.Book || null
+                const audiobook = enriched?.Audiobook || null
 
-            {showBookModal && (
-                <BookModal
-                    type="book"
-                    token={token}
-                    apiUrl={apiUrl}
-                    onClose={() => setShowBookModal(false)}
-                    onSave={() => { setShowBookModal(false); fetchBooks(); }}
-                />
-            )}
+                return (
+                    <ProgressEditModal
+                        progress={editingProgress}
+                        book={book}
+                        audiobook={audiobook}
+                        onClose={() => setEditingProgress(null)}
+                        onSave={handleSaveEdit}
+                        onAddBook={() => {
+                            setLinkingProgressId(editingProgress.id)
+                            setShowBookModal(true)
+                        }}
+                        onAddAudiobook={() => {
+                            setLinkingProgressId(editingProgress.id)
+                            setShowAudiobookModal(true)
+                        }}
+                    />
+                )
+            })()}
 
-            {showAudiobookModal && (
-                <BookModal
-                    type="audiobook"
-                    token={token}
-                    apiUrl={apiUrl}
-                    onClose={() => setShowAudiobookModal(false)}
-                    onSave={() => { setShowAudiobookModal(false); fetchAudiobooks(); }}
-                />
-            )}
+            {showBookModal && (() => {
+                const enriched = progressList.find(p => p.Progress.id === linkingProgressId)
+                const prefillTitle = enriched?.Audiobook?.title || ''
+
+                return (
+                    <BookModal
+                        type="book"
+                        token={token}
+                        apiUrl={apiUrl}
+                        userId={userId}
+                        linkingToProgressId={linkingProgressId}
+                        prefillTitle={linkingProgressId ? prefillTitle : null}
+                        onClose={() => { setShowBookModal(false); setLinkingProgressId(null); }}
+                        onSave={() => {
+                            setShowBookModal(false)
+                            setLinkingProgressId(null)
+                            setEditingProgress(null)
+                            fetchEnrichedProgress()
+                        }}
+                    />
+                )
+            })()}
+
+            {showAudiobookModal && (() => {
+                const enriched = progressList.find(p => p.Progress.id === linkingProgressId)
+                const prefillTitle = enriched?.Book?.title || ''
+
+                return (
+                    <BookModal
+                        type="audiobook"
+                        token={token}
+                        apiUrl={apiUrl}
+                        userId={userId}
+                        linkingToProgressId={linkingProgressId}
+                        prefillTitle={linkingProgressId ? prefillTitle : null}
+                        onClose={() => { setShowAudiobookModal(false); setLinkingProgressId(null); }}
+                        onSave={() => {
+                            setShowAudiobookModal(false)
+                            setLinkingProgressId(null)
+                            setEditingProgress(null)
+                            fetchEnrichedProgress()
+                        }}
+                    />
+                )
+            })()}
         </>
     )
 }

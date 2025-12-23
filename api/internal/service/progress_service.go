@@ -18,6 +18,7 @@ type ProgressService interface {
 	SetBook(id int, bookID int) error
 	SetAudiobook(id int, audiobookID int) error
 	FilterProgress(filter repository.ProgressFilter) ([]domain.Progress, error)
+	GetAllEnrichedByUser(userID int) ([]domain.EnrichedProgress, error)
 }
 
 type progressService struct {
@@ -173,4 +174,8 @@ func (s *progressService) SetAudiobook(id int, audiobookID int) error {
 
 func (s *progressService) FilterProgress(filter repository.ProgressFilter) ([]domain.Progress, error) {
 	return s.repo.FilterProgress(filter)
+}
+
+func (s *progressService) GetAllEnrichedByUser(userID int) ([]domain.EnrichedProgress, error) {
+	return s.repo.GetAllEnrichedByUser(userID)
 }
