@@ -11,7 +11,6 @@ COPY external/ external/
 
 FROM base AS development
 RUN apk --no-cache add curl
-ENV JWT_SECRET=test-secret-for-docker-build
 RUN go test ./...
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/server
 EXPOSE 8080

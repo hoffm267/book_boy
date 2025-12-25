@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,11 +75,20 @@ func (m *SSEManager) ServeHTTP(c *gin.Context) {
 	m.AddClient(client)
 	defer m.RemoveClient(client)
 
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
 	c.Stream(func(w io.Writer) bool {
-		if msg, ok := <-client.Channel; ok {
+		select {
+		case msg, ok := <-client.Channel:
+			if !ok {
+				return false
+			}
 			w.Write(msg)
 			return true
+		case <-ticker.C:
+			w.Write([]byte(":keepalive\n\n"))
+			return true
 		}
-		return false
 	})
 }
