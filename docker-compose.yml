@@ -52,6 +52,8 @@ services:
     ports:
       - '8000:8000'
     restart: unless-stopped
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     healthcheck:
       test: ["CMD", "pgrep", "-f", "consumer.py"]
       interval: 10s

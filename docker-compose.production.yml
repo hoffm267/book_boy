@@ -58,9 +58,13 @@ services:
       - book-boy-network
 
   book-metadata-service:
-    image: 096435303842.dkr.ecr.us-east-2.amazonaws.com/book-metadata-service:latest
+    image: 096435303842.dkr.ecr.us-east-2.amazonaws.com/book-metadata-service:${IMAGE_TAG:-latest}
     container_name: book-metadata-service
     restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
     healthcheck:
       test: ["CMD", "pgrep", "-f", "consumer.py"]
       interval: 10s
@@ -70,12 +74,13 @@ services:
       - book-boy-network
 
   api:
-    image: 096435303842.dkr.ecr.us-east-2.amazonaws.com/book_boy:latest
+    image: 096435303842.dkr.ecr.us-east-2.amazonaws.com/book_boy:${IMAGE_TAG:-latest}
     container_name: book-boy-api
     restart: unless-stopped
     env_file:
       - .env
     environment:
+      GIN_MODE: ${GIN_MODE:-release}
       JWT_SECRET: ${JWT_SECRET}
       DB_HOST: postgres
       DB_PORT: 5432
@@ -104,7 +109,7 @@ services:
       - book-boy-network
 
   web:
-    image: 096435303842.dkr.ecr.us-east-2.amazonaws.com/book-boy-web:latest
+    image: 096435303842.dkr.ecr.us-east-2.amazonaws.com/book-boy-web:${IMAGE_TAG:-latest}
     container_name: book-boy-web
     restart: unless-stopped
     ports:
