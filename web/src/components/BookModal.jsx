@@ -38,7 +38,7 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, us
             }
 
             const body = type === 'book'
-                ? { ...formData, total_pages: parseInt(formData.total_pages) }
+                ? { ...formData, isbn: formData.isbn.replace(/[^0-9]/g, ''), total_pages: parseInt(formData.total_pages) }
                 : formData
 
             const response = await fetch(url, {
