@@ -1,6 +1,7 @@
 services:
-  db:
+  postgres:
     image: postgres:14.1-alpine
+    container_name: book-boy-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
@@ -17,9 +18,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - book-boy-network
 
   redis:
     image: redis:7-alpine
+    container_name: book-boy-redis
     ports:
       - '6379:6379'
     restart: unless-stopped
@@ -28,9 +32,12 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - book-boy-network
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
+    container_name: book-boy-rabbitmq
     ports:
       - '5672:5672'
       - '15672:15672'
@@ -43,12 +50,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - book-boy-network
 
   book-metadata-service:
     build:
       context: ./book_metadata_service
       dockerfile: Dockerfile
       target: development
+    container_name: book-boy-metadata-service
     ports:
       - '8000:8000'
     restart: unless-stopped
@@ -59,16 +69,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - book-boy-network
 
   api:
     build:
       context: ./api
       dockerfile: Dockerfile
       target: development
+    container_name: book-boy-api
     ports:
       - '8080:8080'
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -79,7 +92,7 @@ services:
     restart: unless-stopped
     environment:
       JWT_SECRET: ${JWT_SECRET:-my-local-dev-secret-key}
-      DB_HOST: db
+      DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
@@ -95,12 +108,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - book-boy-network
 
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
       target: development
+    container_name: book-boy-web
     ports:
       - '5173:5173'
     depends_on:
@@ -110,7 +126,13 @@ services:
     volumes:
       - ./web:/app
       - /app/node_modules
+    networks:
+      - book-boy-network
 
 volumes:
   db_data:
     driver: local
+
+networks:
+  book-boy-network:
+    driver: bridge

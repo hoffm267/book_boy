@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:14.1-alpine
@@ -48,7 +46,7 @@ services:
     volumes:
       - ./data/rabbitmq:/var/lib/rabbitmq
     ports:
-      - "15672:15672"  # TODO Management UI - restrict to IP in security group
+      - "15672:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
@@ -59,7 +57,7 @@ services:
 
   book-metadata-service:
     image: 096435303842.dkr.ecr.us-east-2.amazonaws.com/book-metadata-service:${IMAGE_TAG:-latest}
-    container_name: book-metadata-service
+    container_name: book-boy-metadata-service
     restart: unless-stopped
     env_file:
       - .env

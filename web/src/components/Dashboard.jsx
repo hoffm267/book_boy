@@ -15,7 +15,7 @@ function Dashboard({ user, token, onLogout, apiUrl }) {
                 </button>
             </div>
 
-            <Progress token={token} apiUrl={apiUrl} userId={user.id} />
+            <Progress token={token} apiUrl={apiUrl} userId={user.id} onLogout={onLogout} />
         </>
     )
 }

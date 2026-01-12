@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { fetchWithAuth, UnauthorizedError } from '../utils/api'
 
-function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, userId, linkingToProgressId, prefillTitle }) {
+function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, userId, linkingToProgressId, prefillTitle, onLogout }) {
     const [useISBN, setUseISBN] = useState(!prefillTitle && !linkingToProgressId)
     const [formData, setFormData] = useState(
         item || (type === 'book'
@@ -41,14 +42,18 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, us
                 ? { ...formData, isbn: formData.isbn.replace(/[^0-9]/g, ''), total_pages: parseInt(formData.total_pages) }
                 : formData
 
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+            const response = await fetchWithAuth(
+                url,
+                {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(body)
                 },
-                body: JSON.stringify(body)
-            })
+                onLogout
+            )
 
             if (!response.ok) {
                 const data = await response.json()
@@ -63,7 +68,9 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, us
 
             onSave(savedItem)
         } catch (err) {
-            setError(err.message)
+            if (err.name !== 'UnauthorizedError') {
+                setError(err.message)
+            }
         } finally {
             setLoading(false)
         }
@@ -81,9 +88,11 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, us
 
         setCheckingISBN(true)
         try {
-            const response = await fetch(`${apiUrl}/books/filter?isbn=${encodeURIComponent(isbn)}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
+            const response = await fetchWithAuth(
+                `${apiUrl}/books/filter?isbn=${encodeURIComponent(isbn)}`,
+                { headers: { 'Authorization': `Bearer ${token}` } },
+                onLogout
+            )
 
             if (response.ok) {
                 const books = await response.json()
@@ -94,7 +103,9 @@ function BookModal({ type, item, token, apiUrl, onClose, onSave, queryParams, us
                 }
             }
         } catch (err) {
-            console.error('ISBN check failed:', err)
+            if (err.name !== 'UnauthorizedError') {
+                console.error('ISBN check failed:', err)
+            }
         } finally {
             setCheckingISBN(false)
         }

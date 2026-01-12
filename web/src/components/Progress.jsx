@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import BookModal from './BookModal'
 import ProgressEditModal from './ProgressEditModal'
+import { fetchWithAuth, UnauthorizedError } from '../utils/api'
 
-function Progress({ token, apiUrl, userId }) {
+function Progress({ token, apiUrl, userId, onLogout }) {
     const [progressList, setProgressList] = useState([])
     const [editingProgress, setEditingProgress] = useState(null)
     const [originalValues, setOriginalValues] = useState({})
@@ -49,15 +50,19 @@ function Progress({ token, apiUrl, userId }) {
 
     const fetchEnrichedProgress = async () => {
         try {
-            const response = await fetch(`${apiUrl}/progress/enriched`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
+            const response = await fetchWithAuth(
+                `${apiUrl}/progress/enriched`,
+                { headers: { 'Authorization': `Bearer ${token}` } },
+                onLogout
+            )
             const data = await response.json()
             const sortedData = Array.isArray(data) ? data.sort((a, b) => a.Progress.id - b.Progress.id) : []
             setProgressList(sortedData)
         } catch (err) {
-            console.error('Failed to fetch enriched progress:', err)
-            setProgressList([])
+            if (err.name !== 'UnauthorizedError') {
+                console.error('Failed to fetch enriched progress:', err)
+                setProgressList([])
+            }
         }
     }
 
@@ -65,13 +70,19 @@ function Progress({ token, apiUrl, userId }) {
         if (!confirm('Delete this progress entry?')) return
 
         try {
-            await fetch(`${apiUrl}/progress/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
+            await fetchWithAuth(
+                `${apiUrl}/progress/${id}`,
+                {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                },
+                onLogout
+            )
             fetchEnrichedProgress()
         } catch (err) {
-            alert('Failed to delete')
+            if (err.name !== 'UnauthorizedError') {
+                alert('Failed to delete')
+            }
         }
     }
 
@@ -86,31 +97,41 @@ function Progress({ token, apiUrl, userId }) {
     const handleSaveEdit = async (formData) => {
         try {
             if (formData.book_page && formData.book_page !== originalValues.book_page) {
-                await fetch(`${apiUrl}/progress/${editingProgress.id}/page`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                await fetchWithAuth(
+                    `${apiUrl}/progress/${editingProgress.id}/page`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ page: parseInt(formData.book_page) })
                     },
-                    body: JSON.stringify({ page: parseInt(formData.book_page) })
-                })
+                    onLogout
+                )
             }
 
             if (formData.audiobook_time && formData.audiobook_time !== originalValues.audiobook_time) {
-                await fetch(`${apiUrl}/progress/${editingProgress.id}/time`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                await fetchWithAuth(
+                    `${apiUrl}/progress/${editingProgress.id}/time`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ audiobook_time: formData.audiobook_time })
                     },
-                    body: JSON.stringify({ audiobook_time: formData.audiobook_time })
-                })
+                    onLogout
+                )
             }
 
             setEditingProgress(null)
             fetchEnrichedProgress()
         } catch (err) {
-            alert('Failed to update progress')
+            if (err.name !== 'UnauthorizedError') {
+                alert('Failed to update progress')
+            }
         }
     }
 
@@ -230,6 +251,7 @@ function Progress({ token, apiUrl, userId }) {
                             setEditingProgress(null)
                             fetchEnrichedProgress()
                         }}
+                        onLogout={onLogout}
                     />
                 )
             })()}
@@ -253,6 +275,7 @@ function Progress({ token, apiUrl, userId }) {
                             setEditingProgress(null)
                             fetchEnrichedProgress()
                         }}
+                        onLogout={onLogout}
                     />
                 )
             })()}
