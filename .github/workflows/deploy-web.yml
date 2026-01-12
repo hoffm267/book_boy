@@ -42,13 +42,22 @@ jobs:
           docker buildx build --platform linux/arm64 --target production -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --push .
           echo "Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-      - name: Copy files to EC2
+      - name: Copy docker-compose to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.production.yml,web/nginx-ssl.conf"
+          source: "docker-compose.production.yml"
+          target: "~/book_boy"
+
+      - name: Copy nginx config to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "web/nginx-ssl.conf"
           target: "~/book_boy"
 
       - name: Deploy to EC2
