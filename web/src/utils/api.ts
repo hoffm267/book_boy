@@ -5,7 +5,11 @@ export class UnauthorizedError extends Error {
   }
 }
 
-export async function fetchWithAuth(url, options = {}, onUnauthorized) {
+export async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {},
+  onUnauthorized?: () => void
+): Promise<Response> {
   const response = await fetch(url, options)
 
   if (response.status === 401) {

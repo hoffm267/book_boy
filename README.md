@@ -62,8 +62,14 @@ docker compose down
 ### Run Tests
 
 ```bash
-cd api
-go test ./...
+# Start services first
+docker compose up -d
+
+# API tests
+docker compose exec api go test ./...
+
+# Frontend type check
+docker compose exec web bun run typecheck
 ```
 
 ---
@@ -72,7 +78,7 @@ go test ./...
 
 **Microservices:**
 - **API** (Go): REST API with JWT auth, progress tracking, cross-format sync
-- **Web** (React): SPA frontend with real-time SSE updates
+- **Web** (React + TypeScript): SPA frontend with real-time SSE updates
 - **Metadata Service** (Python): Async book metadata fetching from external APIs
 - **Database** (PostgreSQL): User data, books, audiobooks, progress
 - **Cache** (Redis): 10-minute TTL for book metadata
@@ -203,7 +209,7 @@ DB_PASSWORD=my-custom-password
 ## Tech Stack
 
 - **API**: Go 1.24 + Gin framework
-- **Frontend**: React + Vite + Bun
+- **Frontend**: TypeScript + React + Vite + Bun
 - **Database**: PostgreSQL 14
 - **Cache**: Redis 7
 - **Queue**: RabbitMQ 3
@@ -236,10 +242,15 @@ book_boy/
 
 ### API Tests
 ```bash
-cd api
-go test ./...
-go test -v ./internal/service
-go test -cover ./...
+# Requires containers running: docker compose up -d
+docker compose exec api go test ./...
+docker compose exec api go test -v ./internal/service
+docker compose exec api go test -cover ./...
+```
+
+### Frontend Type Check
+```bash
+docker compose exec web bun run typecheck
 ```
 
 ### API Integration Tests (Bruno)
