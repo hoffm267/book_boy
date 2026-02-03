@@ -10,7 +10,7 @@ COPY . .
 
 EXPOSE 5173
 
-CMD ["bun", "run", "dev", "--", "--host"]
+CMD ["sh", "-c", "bun install && bun run dev --host"]
 
 FROM oven/bun:1-alpine AS builder
 
