@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import Auth from './components/Auth'
 import Dashboard from './components/Dashboard'
+import type { User, AuthResponse } from './types'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'))
-  const [user, setUser] = useState(null)
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
@@ -15,7 +16,7 @@ function App() {
     }
   }, [])
 
-  const handleLogin = (authData) => {
+  const handleLogin = (authData: AuthResponse) => {
     setToken(authData.token)
     setUser(authData.user)
     localStorage.setItem('token', authData.token)
