@@ -262,6 +262,41 @@ func TestBookService_GetSimilarTitles(t *testing.T) {
 	}
 }
 
+func TestBookService_Create_ValidationError(t *testing.T) {
+	mockRepo := &mockBookRepo{Books: make(map[int]domain.Book)}
+	svc := NewBookService(mockRepo, nil, nil)
+
+	book := &domain.Book{ISBN: "1234", Title: "Valid", TotalPages: -5}
+	_, err := svc.Create(book)
+	if err == nil {
+		t.Fatal("expected validation error for negative total_pages")
+	}
+}
+
+func TestBookService_Errors(t *testing.T) {
+	mockRepo := &mockBookRepo{Books: make(map[int]domain.Book), Err: errors.New("db error")}
+	svc := NewBookService(mockRepo, nil, nil)
+
+	if _, err := svc.GetAll(); err == nil {
+		t.Error("expected GetAll to return error")
+	}
+	if _, err := svc.Create(&domain.Book{ISBN: "1234", Title: "Test", TotalPages: 100}); err == nil {
+		t.Error("expected Create to return error")
+	}
+	if err := svc.Update(&domain.Book{ID: 1, ISBN: "1234", Title: "Test", TotalPages: 100}); err == nil {
+		t.Error("expected Update to return error")
+	}
+	if err := svc.Delete(1); err == nil {
+		t.Error("expected Delete to return error")
+	}
+	if _, err := svc.GetByTitle("test"); err == nil {
+		t.Error("expected GetByTitle to return error")
+	}
+	if _, err := svc.FilterBooks(repository.BookFilter{}); err == nil {
+		t.Error("expected FilterBooks to return error")
+	}
+}
+
 func TestBookService_FilterBooks(t *testing.T) {
 	mockRepo := &mockBookRepo{
 		Books: map[int]domain.Book{

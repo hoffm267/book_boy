@@ -52,3 +52,6 @@ env/
 
 # Deployment info
 book-boy-ec2-info.txt
+
+# Personal notes
+todo.md

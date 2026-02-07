@@ -58,6 +58,29 @@ func (m *mockUserRepo) Delete(id int) error {
 	return nil
 }
 
+func TestUserService_GetAll_Error(t *testing.T) {
+	repo := &mockUserRepo{Users: make(map[int]domain.User), Err: errors.New("db error")}
+	svc := NewUserService(repo)
+
+	_, err := svc.GetAll()
+	if err == nil {
+		t.Fatal("expected error from repo")
+	}
+}
+
+func TestUserService_GetByID_NotFound(t *testing.T) {
+	repo := &mockUserRepo{Users: make(map[int]domain.User)}
+	svc := NewUserService(repo)
+
+	user, err := svc.GetByID(999)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if user != nil {
+		t.Fatalf("expected nil for non-existent user, got %+v", user)
+	}
+}
+
 func TestUserService_CRUD(t *testing.T) {
 	repo := &mockUserRepo{Users: make(map[int]domain.User)}
 	service := NewUserService(repo)

@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"book_boy/api/external/book_metadata"
 	"book_boy/api/internal/controllers"
 	"book_boy/api/internal/db"
 	"book_boy/api/internal/infra"
@@ -95,25 +94,16 @@ func main() {
 
 	trackingService := service.NewTrackingService(bookRepo, audiobookRepo, progressRepo)
 
-	bookMetadataServiceURL := os.Getenv("BOOK_METADATA_SERVICE_URL")
-	if bookMetadataServiceURL == "" {
-		bookMetadataServiceURL = "http://localhost:8000"
-	}
-	bookMetadataClient := book_metadata.NewClient(bookMetadataServiceURL)
-	bookMetadataService := service.NewBookMetadataService(bookMetadataClient, cache)
-
 	metadataConsumer := workers.NewMetadataEventConsumer(rabbitConn, bookService, sseManager)
 	if err := metadataConsumer.Start(); err != nil {
 		log.Fatalf("Failed to start metadata event consumer: %v", err)
 	}
 	fmt.Println("Started metadata event consumer")
 
-	bookController := controllers.NewBookController(bookService, progressService, bookMetadataService)
+	bookController := controllers.NewBookController(bookService, progressService)
 	audiobookController := controllers.NewAudiobookController(audiobookService, progressService)
 	progressController := controllers.NewProgressController(progressService, bookService, audiobookService)
 	trackingController := controllers.NewTrackingController(trackingService)
-	bookMetadataController := controllers.NewBookMetadataController(bookMetadataService)
-
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
@@ -150,7 +140,6 @@ func main() {
 	protected := r.Group("")
 	protected.Use(middleware.AuthMiddleware(authService))
 	{
-		bookMetadataController.RegisterRoutes(protected)
 		bookController.RegisterRoutes(protected)
 		audiobookController.RegisterRoutes(protected)
 		userController.RegisterRoutes(protected)

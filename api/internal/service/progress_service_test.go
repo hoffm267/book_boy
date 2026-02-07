@@ -352,4 +352,106 @@ func TestProgressService_FilterProgress(t *testing.T) {
 	}
 }
 
+func TestProgressService_Create_ValidationError(t *testing.T) {
+	mockRepo := &mockProgressRepo{Data: make(map[int]domain.Progress)}
+	svc := NewProgressService(mockRepo)
+
+	progress := domain.Progress{
+		UserID: 1,
+	}
+	_, err := svc.Create(&progress)
+	if err == nil {
+		t.Fatal("expected validation error for progress with no book_id or audiobook_id")
+	}
+}
+
+func TestProgressService_Create_NegativeBookPage(t *testing.T) {
+	mockRepo := &mockProgressRepo{Data: make(map[int]domain.Progress)}
+	svc := NewProgressService(mockRepo)
+
+	bookID := 1
+	negativePage := -1
+	progress := domain.Progress{
+		UserID:   1,
+		BookID:   &bookID,
+		BookPage: &negativePage,
+	}
+	_, err := svc.Create(&progress)
+	if err == nil {
+		t.Fatal("expected validation error for negative book_page")
+	}
+}
+
+func TestProgressService_GetByIDWithCompletion(t *testing.T) {
+	bookID := 1
+	page := 250
+	mockRepo := &mockProgressRepo{
+		Data: map[int]domain.Progress{
+			1: {ID: 1, UserID: 1, BookID: &bookID, BookPage: &page},
+		},
+	}
+	svc := NewProgressService(mockRepo)
+
+	result, err := svc.GetByIDWithCompletion(1)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+	if result.CompletionPercent == 0 {
+		t.Error("expected non-zero completion percent")
+	}
+}
+
+func TestProgressService_SetBook_NotFound(t *testing.T) {
+	mockRepo := &mockProgressRepo{Data: make(map[int]domain.Progress)}
+	svc := NewProgressService(mockRepo)
+
+	err := svc.SetBook(999, 1)
+	if err == nil {
+		t.Fatal("expected error for non-existent progress")
+	}
+}
+
+func TestProgressService_SetAudiobook_NotFound(t *testing.T) {
+	mockRepo := &mockProgressRepo{Data: make(map[int]domain.Progress)}
+	svc := NewProgressService(mockRepo)
+
+	err := svc.SetAudiobook(999, 1)
+	if err == nil {
+		t.Fatal("expected error for non-existent progress")
+	}
+}
+
+func TestProgressService_GetAllEnrichedByUser(t *testing.T) {
+	bookID := 1
+	page := 50
+	mockRepo := &mockProgressRepo{
+		Data: map[int]domain.Progress{
+			1: {ID: 1, UserID: 1, BookID: &bookID, BookPage: &page},
+			2: {ID: 2, UserID: 2, BookID: &bookID, BookPage: &page},
+		},
+	}
+	svc := NewProgressService(mockRepo)
+
+	results, err := svc.GetAllEnrichedByUser(1)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 enriched progress for user 1, got %d", len(results))
+	}
+}
+
+func TestProgressService_GetAllEnrichedByUser_Error(t *testing.T) {
+	mockRepo := &mockProgressRepo{Data: make(map[int]domain.Progress), Err: errors.New("db error")}
+	svc := NewProgressService(mockRepo)
+
+	_, err := svc.GetAllEnrichedByUser(1)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
 func ptrInt(i int) *int { return &i }
