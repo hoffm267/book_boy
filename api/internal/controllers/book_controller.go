@@ -11,16 +11,14 @@ import (
 )
 
 type BookController struct {
-	Service             service.BookService
-	ProgressService     service.ProgressService
-	BookMetadataService *service.BookMetadataService
+	Service         service.BookService
+	ProgressService service.ProgressService
 }
 
-func NewBookController(service service.BookService, pgService service.ProgressService, metadataService *service.BookMetadataService) *BookController {
+func NewBookController(service service.BookService, pgService service.ProgressService) *BookController {
 	return &BookController{
-		Service:             service,
-		ProgressService:     pgService,
-		BookMetadataService: metadataService,
+		Service:         service,
+		ProgressService: pgService,
 	}
 }
 
