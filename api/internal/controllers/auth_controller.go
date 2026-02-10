@@ -1,9 +1,10 @@
 package controllers
 
 import (
-	"book_boy/api/internal/service"
 	"book_boy/api/internal/domain"
+	"book_boy/api/internal/service"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +22,7 @@ func (ac *AuthController) RegisterRoutes(r gin.IRouter) {
 	{
 		auth.POST("/register", ac.Register)
 		auth.POST("/login", ac.Login)
+		auth.POST("/demo", ac.DemoLogin)
 	}
 }
 
@@ -74,4 +76,27 @@ func (ac *AuthController) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (ac *AuthController) DemoLogin(c *gin.Context) {
+	demoEmail := os.Getenv("DEMO_USER_EMAIL")
+	demoPassword := os.Getenv("DEMO_USER_PASSWORD")
+	if demoEmail == "" || demoPassword == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "demo account not available"})
+		return
+	}
+
+	token, user, err := ac.Service.Login(&domain.LoginRequest{
+		Email:    demoEmail,
+		Password: demoPassword,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "demo login failed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.AuthResponse{
+		Token: token,
+		User:  *user,
+	})
 }

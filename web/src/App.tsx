@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Auth from './components/Auth'
 import Dashboard from './components/Dashboard'
+import { AuthProvider } from './AuthContext'
 import type { User, AuthResponse } from './types'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
@@ -32,15 +33,12 @@ function App() {
 
   return (
     <div className="container">
-      {!token ? (
+      {!token || !user ? (
         <Auth onLogin={handleLogin} apiUrl={API_URL} />
       ) : (
-        <Dashboard
-          user={user}
-          token={token}
-          onLogout={handleLogout}
-          apiUrl={API_URL}
-        />
+        <AuthProvider token={token} user={user} apiUrl={API_URL} onLogout={handleLogout}>
+          <Dashboard />
+        </AuthProvider>
       )}
     </div>
   )

@@ -101,6 +101,8 @@ services:
       BOOK_METADATA_SERVICE_URL: http://book-metadata-service:8000
       REDIS_URL: redis:6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      DEMO_USER_EMAIL: demo@bookboy.app
+      DEMO_USER_PASSWORD: Demo123!
     volumes:
       - ./api:/app
     healthcheck:
