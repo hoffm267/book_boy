@@ -145,18 +145,19 @@ func main() {
 		userController.RegisterRoutes(protected)
 		progressController.RegisterRoutes(protected)
 		trackingController.RegisterRoutes(protected)
+
 	}
 
 	r.GET("/events", func(c *gin.Context) {
-		token := c.Query("token")
-		if token == "" {
-			c.JSON(401, gin.H{"error": "token required"})
+		tokenStr := c.Query("token")
+		if tokenStr == "" {
+			c.JSON(401, gin.H{"error": "token query parameter required"})
 			return
 		}
 
-		_, err := authService.GetUserFromToken(token)
+		_, err := authService.GetUserFromToken(tokenStr)
 		if err != nil {
-			c.JSON(401, gin.H{"error": "invalid token"})
+			c.JSON(401, gin.H{"error": "invalid or expired token"})
 			return
 		}
 

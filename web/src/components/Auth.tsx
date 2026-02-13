@@ -39,10 +39,10 @@ function Auth({ onLogin, apiUrl }: AuthProps) {
         body: JSON.stringify(body)
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
 
       if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed')
+        throw new Error(data?.error || 'Authentication failed')
       }
 
       onLogin(data)
@@ -62,31 +62,26 @@ function Auth({ onLogin, apiUrl }: AuthProps) {
     setLoading(true)
 
     try {
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      const response = await fetch(`${apiUrl}/auth/demo`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'demo@bookboy.app',
-          password: 'Demo123!'
-        })
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
 
       if (!response.ok) {
-        throw new Error(data.error || 'Demo login failed')
+        throw new Error(data?.error || 'Demo account not available')
       }
 
       onLogin(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Demo login failed')
+      setError(err instanceof Error ? err.message : 'Demo account not available')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="card" style={{ maxWidth: '400px', margin: '100px auto' }}>
+    <div className="card auth-card">
       <h2>{isLogin ? 'Login' : 'Register'}</h2>
 
       {error && <div className="error">{error}</div>}
@@ -132,30 +127,24 @@ function Auth({ onLogin, apiUrl }: AuthProps) {
         </button>
       </form>
 
+      <div className="auth-divider">
+        <span>or</span>
+      </div>
+
       {isLogin && (
         <button
           type="button"
           onClick={handleDemoLogin}
-          className="btn"
+          className="btn btn-demo"
           disabled={loading}
-          style={{
-            width: '100%',
-            marginTop: '10px',
-            backgroundColor: '#95a5a6',
-            color: 'white',
-            border: 'none'
-          }}
         >
-          {loading ? 'Loading...' : 'Try Demo Account'}
+          {loading ? 'Loading...' : 'Try Demo Account — No sign-up needed'}
         </button>
       )}
 
-      <p style={{ marginTop: '15px', textAlign: 'center' }}>
+      <p className="auth-switch">
         {isLogin ? "Don't have an account? " : 'Already have an account? '}
-        <button
-          onClick={() => setIsLogin(!isLogin)}
-          style={{ background: 'none', border: 'none', color: '#3498db', cursor: 'pointer' }}
-        >
+        <button onClick={() => setIsLogin(!isLogin)} className="link-btn">
           {isLogin ? 'Register' : 'Login'}
         </button>
       </p>

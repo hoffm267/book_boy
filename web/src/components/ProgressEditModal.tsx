@@ -62,8 +62,7 @@ function ProgressEditModal({ progress, book, audiobook, onClose, onSave, onAddBo
               <button
                 type="button"
                 onClick={onAddAudiobook}
-                className="btn"
-                style={{ width: '100%' }}
+                className="btn btn-full"
               >
                 + Add Audiobook
               </button>
@@ -75,15 +74,14 @@ function ProgressEditModal({ progress, book, audiobook, onClose, onSave, onAddBo
               <button
                 type="button"
                 onClick={onAddBook}
-                className="btn"
-                style={{ width: '100%' }}
+                className="btn btn-full"
               >
                 + Add Book
               </button>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <div className="modal-actions">
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancel
             </button>
