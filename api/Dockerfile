@@ -7,7 +7,6 @@ RUN go mod download
 
 COPY cmd/ cmd/
 COPY internal/ internal/
-COPY external/ external/
 
 FROM base AS development
 RUN apk --no-cache add curl
@@ -23,7 +22,6 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY cmd/ cmd/
 COPY internal/ internal/
-COPY external/ external/
 EXPOSE 8080
 EXPOSE 2345
 CMD go build -gcflags="all=-N -l" -o main ./cmd/server && \
