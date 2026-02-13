@@ -89,6 +89,8 @@ services:
       REDIS_URL: redis:6379
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
       BOOK_METADATA_SERVICE_URL: http://book-metadata-service:8000
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

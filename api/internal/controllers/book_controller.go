@@ -1,11 +1,12 @@
 package controllers
 
 import (
-	"book_boy/api/internal/service"
 	"book_boy/api/internal/domain"
 	"book_boy/api/internal/repository"
+	"book_boy/api/internal/service"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -72,6 +73,8 @@ func (bc *BookController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	book.ISBN = strings.ReplaceAll(strings.ReplaceAll(book.ISBN, "-", ""), " ", "")
 
 	if book.ISBN == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "isbn is required"})
@@ -230,7 +233,8 @@ func (bc *BookController) FilterBooks(c *gin.Context) {
 		}
 	}
 	if isbn := c.Query("isbn"); isbn != "" {
-		filter.ISBN = &isbn
+		cleaned := strings.ReplaceAll(strings.ReplaceAll(isbn, "-", ""), " ", "")
+		filter.ISBN = &cleaned
 	}
 	if title := c.Query("title"); title != "" {
 		filter.Title = &title
