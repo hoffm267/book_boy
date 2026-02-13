@@ -24,6 +24,7 @@ node_modules/
 __pycache__/
 
 # Go
+api/server
 *.exe
 *.exe~
 *.dll
@@ -51,3 +52,6 @@ env/
 
 # Deployment info
 book-boy-ec2-info.txt
+
+# Personal notes
+todo.md

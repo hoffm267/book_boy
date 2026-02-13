@@ -1,6 +1,7 @@
 package service
 
 import (
+	"book_boy/api/internal/domain"
 	"math"
 	"testing"
 	"time"
@@ -249,5 +250,122 @@ func TestSymmetry(t *testing.T) {
 		if gotPage != tt.page {
 			t.Errorf("Time %v should map to page %d, got %d", tt.time, tt.page, gotPage)
 		}
+	}
+}
+
+func TestCalculateCompletionPercent(t *testing.T) {
+	tests := []struct {
+		name        string
+		progress    *domain.Progress
+		totalPages  int
+		totalLength *domain.CustomDuration
+		want        int
+	}{
+		{
+			name:        "book only 50%",
+			progress:    &domain.Progress{BookPage: ptrInt(50)},
+			totalPages:  100,
+			totalLength: nil,
+			want:        50,
+		},
+		{
+			name:        "book only 100%",
+			progress:    &domain.Progress{BookPage: ptrInt(100)},
+			totalPages:  100,
+			totalLength: nil,
+			want:        100,
+		},
+		{
+			name:        "audiobook only 50%",
+			progress:    &domain.Progress{AudiobookTime: &domain.CustomDuration{Duration: 30 * time.Minute}},
+			totalPages:  0,
+			totalLength: &domain.CustomDuration{Duration: 60 * time.Minute},
+			want:        50,
+		},
+		{
+			name:        "audiobook only 100%",
+			progress:    &domain.Progress{AudiobookTime: &domain.CustomDuration{Duration: 60 * time.Minute}},
+			totalPages:  0,
+			totalLength: &domain.CustomDuration{Duration: 60 * time.Minute},
+			want:        100,
+		},
+		{
+			name: "both formats averaged",
+			progress: &domain.Progress{
+				BookPage:      ptrInt(50),
+				AudiobookTime: &domain.CustomDuration{Duration: 30 * time.Minute},
+			},
+			totalPages:  100,
+			totalLength: &domain.CustomDuration{Duration: 60 * time.Minute},
+			want:        50,
+		},
+		{
+			name: "both formats different percentages",
+			progress: &domain.Progress{
+				BookPage:      ptrInt(80),
+				AudiobookTime: &domain.CustomDuration{Duration: 20 * time.Minute},
+			},
+			totalPages:  100,
+			totalLength: &domain.CustomDuration{Duration: 60 * time.Minute},
+			want:        57, // (80 + 33.33) / 2 ≈ 56.67 -> rounds to 57
+		},
+		{
+			name:        "no data returns 0",
+			progress:    &domain.Progress{},
+			totalPages:  0,
+			totalLength: nil,
+			want:        0,
+		},
+		{
+			name:        "book page nil returns 0",
+			progress:    &domain.Progress{BookPage: nil},
+			totalPages:  100,
+			totalLength: nil,
+			want:        0,
+		},
+		{
+			name:        "book over 100% clamped",
+			progress:    &domain.Progress{BookPage: ptrInt(150)},
+			totalPages:  100,
+			totalLength: nil,
+			want:        100,
+		},
+		{
+			name:        "audiobook over 100% clamped",
+			progress:    &domain.Progress{AudiobookTime: &domain.CustomDuration{Duration: 90 * time.Minute}},
+			totalPages:  0,
+			totalLength: &domain.CustomDuration{Duration: 60 * time.Minute},
+			want:        100,
+		},
+		{
+			name:        "zero total pages with book page",
+			progress:    &domain.Progress{BookPage: ptrInt(50)},
+			totalPages:  0,
+			totalLength: nil,
+			want:        0,
+		},
+		{
+			name:        "zero total length with audiobook time",
+			progress:    &domain.Progress{AudiobookTime: &domain.CustomDuration{Duration: 30 * time.Minute}},
+			totalPages:  0,
+			totalLength: &domain.CustomDuration{Duration: 0},
+			want:        0,
+		},
+		{
+			name:        "nil total length with audiobook time",
+			progress:    &domain.Progress{AudiobookTime: &domain.CustomDuration{Duration: 30 * time.Minute}},
+			totalPages:  0,
+			totalLength: nil,
+			want:        0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := calculateCompletionPercent(tt.progress, tt.totalPages, tt.totalLength)
+			if got != tt.want {
+				t.Errorf("calculateCompletionPercent() = %d, want %d", got, tt.want)
+			}
+		})
 	}
 }
